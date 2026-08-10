@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing and tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Medical imaging data
+data/*
+!data/README.md
+*.nii
+*.nii.gz
+*.dcm
+
+# Model checkpoints and deployment artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Generated artifacts
+artifacts/*
+!artifacts/.gitkeep
+
+# Logs
+*.log
+
+# Local environment/configuration
+.env
+.env.*

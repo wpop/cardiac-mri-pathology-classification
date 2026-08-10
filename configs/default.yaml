@@ -1,0 +1,19 @@
+project:
+  name: cardiac-mri-pathology-classification
+  seed: 42
+
+data:
+  dataset_name: ACDC
+  raw_data_dir: null
+
+model:
+  name: ResNet3D18
+  input_channels: 2
+  num_classes: 5
+
+training:
+  num_folds: 5
+
+deployment:
+  input_name: cine_mri
+  output_name: logits
