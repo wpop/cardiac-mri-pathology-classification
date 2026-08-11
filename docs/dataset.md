@@ -2,19 +2,23 @@
 
 ## Primary Dataset
 
-This project uses the **ACDC — Automated Cardiac Diagnosis Challenge** dataset as the primary source of cardiac cine MRI data.
+This project uses the **ACDC — Automated Cardiac Diagnosis Challenge** dataset for patient-level cardiac pathology classification from cardiac cine MRI.
 
 Official dataset page:
 
 https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html
 
-The dataset is used for patient-level cardiac pathology classification.
+Raw ACDC data must never be committed to Git.
 
 ---
 
-## Expected Diagnostic Classes
+## Diagnostic Classes
 
-The expected diagnostic groups are:
+The authoritative class mapping is stored in:
+
+```text
+configs/class_mapping.json
+```
 
 | Index | Code | Diagnosis                   |
 | ----: | ---- | --------------------------- |
@@ -24,110 +28,108 @@ The expected diagnostic groups are:
 |     3 | MINF | Myocardial infarction       |
 |     4 | RV   | Abnormal right ventricle    |
 
-The authoritative class mapping is stored in:
+---
+
+## Measured Phase 1 Facts
+
+The official real ACDC training cohort contains:
 
 ```text
-configs/class_mapping.json
+100 patients
+20 DCM
+20 HCM
+20 MINF
+20 NOR
+20 RV
 ```
 
-The commonly used labeled ACDC cohort is often described as approximately 100 patients with roughly 20 patients per class.
+Standalone ED/ES findings:
 
-These numbers must not be hard-coded.
+* standalone ED/ES volumes exist for all 100 patients;
+* standalone ED/ES are the authoritative spatial images;
+* standalone ED/ES orientation is LPS for 100/100 patients;
+* patient-wise ED/ES geometry is consistent.
 
-The real downloaded dataset will be inspected directly.
+4D cine finding:
+
+* raw ED/ES frames extracted from the 4D cine match standalone ED/ES arrays exactly for 100/100 patients;
+* the 4D cine affine is not the authoritative preprocessing spatial reference.
+
+Measured geometry:
+
+* depth ranges from 6 to 18 source slices;
+* XY spacing varies substantially, approximately 0.703 mm to 1.920 mm;
+* Z spacing includes 5.0, 6.5, 7.0, and 10.0 mm;
+* source orientations for standalone ED/ES are all LPS.
+
+Z geometry by class showed measurable class correlation. A leakage-safe geometry-only diagnostic baseline found:
+
+```text
+Z geometry only OOF Accuracy approximately 0.390
+Z geometry only OOF Macro F1 approximately 0.365
+Balanced chance accuracy 0.200
+```
+
+Background/intensity findings:
+
+* ED/ES contain no NaN, +Inf, -Inf, or negative intensities;
+* exact zero is not a reliable universal background marker;
+* global minimum is not a reliable background definition;
+* boundary intensity is not a reliable background definition.
 
 ---
 
-## Model Sample
+## Frozen Phase 1 Design Decisions
 
-One model sample represents one patient.
-
-The project uses:
+Model samples are patient-level ED/ES pairs:
 
 ```text
 channel 0 = ED
 channel 1 = ES
 ```
 
-where:
-
-* ED is the end-diastolic cardiac volume;
-* ES is the end-systolic cardiac volume.
-
-The two phases are paired for the same patient and later combined into one tensor:
+Frozen preprocessing:
 
 ```text
-[2, D, H, W]
+target orientation: LPS
+target spacing:     X=1.50 mm, Y=1.50 mm, Z=7.50 mm
+localization:       deterministic geometric FOV-center crop
+final tensor:       [2, 14, 144, 144]
+batch tensor:       [N, 2, 14, 144, 144]
 ```
 
-The project does not perform per-slice classification.
+Rejected localization methods:
 
----
+* temporal-variance connected-component localization;
+* ED-ES connected-component localization.
 
-## Phase 1 Dataset Inspection
+Normalization decision:
 
-Before preprocessing constants are finalized, the real ACDC dataset must be inspected.
+* use all real valid voxels inside the deterministic ROI before artificial Z padding;
+* jointly normalize ED and ES per patient;
+* clip at joint p0.5 and p99.5;
+* use one joint mean/std for both phases.
 
-For every labeled patient, record:
+Known residual shortcut:
 
-* patient ID;
-* diagnostic class;
-* ED frame;
-* ES frame;
-* image dimensions;
-* slice count;
-* X spacing;
-* Y spacing;
-* Z spacing or effective inter-slice spacing;
-* physical Z coverage;
-* image orientation;
-* affine information;
-* intensity characteristics;
-* fraction of zero or background voxels;
-* NaN/Inf presence.
+```text
+Final realized Z-padding diagnostic OOF Accuracy = 0.360
+Final realized Z-padding diagnostic OOF Macro F1 = 0.296
+Chance accuracy = 0.200
+```
 
-The inspection must also analyze distributions by diagnostic class.
-
----
-
-## Decisions Driven by the Real Dataset
-
-Phase 1 must determine:
-
-* final model depth `D`;
-* final spatial dimensions `H` and `W`;
-* whether Z resampling is required;
-* target physical spacing;
-* deterministic crop strategy;
-* foreground/background rule;
-* normalization strategy;
-* expected padding fraction;
-* whether padding or slice count could become a shortcut signal;
-* where depth downsampling should begin in the 3D ResNet.
-
-These decisions must be based on measured ACDC data rather than assumptions.
+This residual acquisition/padding shortcut risk must be considered during evaluation.
 
 ---
 
 ## Data Policy
-
-Raw ACDC data must never be committed to Git.
 
 Do not commit:
 
 * NIfTI volumes;
 * downloaded archives;
 * extracted raw patient data;
-* temporary preprocessing outputs.
+* temporary preprocessing outputs;
+* large checkpoints.
 
-The repository keeps only source code, configuration, documentation, small reproducibility metadata, and explicitly approved reference artifacts.
-
-Medical-data tests and preprocessing validation use real ACDC data rather than synthetic medical datasets.
-
----
-
-## Current Status
-
-The ACDC dataset has not yet been inspected in this project.
-
-This document will be updated after Phase 1 with the measured patient counts, class distribution, geometry statistics, spacing statistics, orientation findings, background analysis, and preprocessing decisions.
+Repository artifacts should be code, configuration, documentation, and approved small analysis outputs.

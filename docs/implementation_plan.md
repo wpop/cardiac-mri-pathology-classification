@@ -31,9 +31,9 @@ Do not implement preprocessing, the neural network, or training yet.
 
 ---
 
-## Phase 1 — Real ACDC Dataset Inspection
+## Phase 1 — Real ACDC Dataset Inspection — COMPLETE
 
-Download and inspect the real ACDC dataset before freezing preprocessing or architecture constants.
+The real official ACDC training cohort has been inspected and Phase 1 is complete.
 
 Verify:
 
@@ -51,22 +51,22 @@ Verify:
 
 Analyze whether acquisition variables such as slice count or padding fraction correlate with diagnosis.
 
-Phase 1 must determine:
+Phase 1 froze:
 
-* final D;
-* final H/W;
-* whether Z resampling is required;
-* target spacing;
-* crop strategy;
-* foreground/background rule;
-* normalization strategy;
-* depth-downsampling schedule for the 3D ResNet.
+* authoritative standalone ED/ES spatial inputs;
+* LPS target orientation;
+* target spacing `X=1.50 mm`, `Y=1.50 mm`, `Z=7.50 mm`;
+* deterministic geometric FOV-center crop;
+* final tensor shape `[2, 14, 144, 144]`;
+* joint ED/ES p0.5-p99.5 clipping and z-score normalization;
+* post-normalization Z padding to `D=14`;
+* anisotropy-aware ResNet3D18 depth-downsampling schedule.
 
-These decisions must be based on the real ACDC data.
+Known residual acquisition/padding shortcut risk remains documented in the preprocessing contract.
 
 ---
 
-## Phase 2 — Dataset Indexing and Patient Splits
+## Phase 2 — Dataset Indexing and Patient Splits — NEXT
 
 Implement:
 

@@ -6,10 +6,58 @@ data:
   dataset_name: ACDC
   raw_data_dir: null
 
+preprocessing:
+  orientation: LPS
+
+  target_spacing_mm:
+    z: 7.5
+    y: 1.5
+    x: 1.5
+
+  target_shape:
+    d: 14
+    h: 144
+    w: 144
+
+  crop:
+    strategy: fov_center
+
+  interpolation:
+    image: linear
+
+  intensity:
+    normalization_scope: joint_ed_es
+    lower_percentile: 0.5
+    upper_percentile: 99.5
+    epsilon: 1.0e-6
+
+  padding:
+    z_value: 0.0
+    apply_after_normalization: true
+
+  array:
+    source_order: XYZ
+    model_order: ZYX
+    dtype: float32
+
 model:
   name: ResNet3D18
   input_channels: 2
   num_classes: 5
+
+  stem:
+    kernel_size: [3, 7, 7]
+    stride: [1, 2, 2]
+    padding: [1, 3, 3]
+
+  stage_strides:
+    - [1, 1, 1]
+    - [1, 2, 2]
+    - [2, 2, 2]
+    - [2, 2, 2]
+
+  blocks_per_stage: [2, 2, 2, 2]
+  channels_per_stage: [64, 128, 256, 512]
 
 training:
   num_folds: 5

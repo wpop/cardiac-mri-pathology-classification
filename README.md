@@ -1552,7 +1552,7 @@ as well as:
 
 ## Current Status
 
-**Phase 0 — Project Bootstrap**
+**Phase 1 — COMPLETE**
 
 Completed so far:
 
@@ -1563,26 +1563,29 @@ Completed so far:
 * `.gitignore` configured;
 * `pyproject.toml` configured;
 * `Makefile` configured.
+* real ACDC Phase 1 inspection completed;
+* preprocessing contract frozen;
+* data-driven ResNet3D18 spatial geometry frozen.
 
-No ACDC data has been analyzed yet.
-
-No final preprocessing constants have been frozen.
-
-No final values have been selected for:
+Frozen preprocessing summary:
 
 ```text
-D
-H
-W
-target voxel spacing
-Z-resampling
-crop dimensions
-normalization percentiles
-depth-downsampling schedule
+orientation: LPS
+spacing:     Z=7.50 mm, Y=1.50 mm, X=1.50 mm
+shape:       [2, 14, 144, 144]
+crop:        deterministic geometric FOV-center
+normalizer:  joint ED/ES p0.5-p99.5 clipping and z-score
+padding:     post-normalization center Z padding with value 0.0
+```
+
+Frozen model input geometry:
+
+```text
+[N, 2, 14, 144, 144] -> raw logits [N, 5]
 ```
 
 No neural network has been implemented yet.
 
 No training has been performed.
 
-The next major milestone after Phase 0 is **Phase 1: real ACDC dataset inspection**.
+The next phase is **Phase 2 — Dataset Indexing and Patient Splits**.

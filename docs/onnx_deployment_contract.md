@@ -4,10 +4,8 @@
 
 **Status: provisional — not frozen.**
 
-The final ONNX deployment contract will be completed after:
+The overall ONNX deployment contract remains provisional and will be completed after:
 
-* Phase 1 dataset inspection;
-* preprocessing design freeze;
 * final model training;
 * ONNX export;
 * PyTorch ↔ ONNX Runtime parity validation.
@@ -38,14 +36,18 @@ Planned dtype:
 
 Planned tensor layout:
 
-`[N, 2, D, H, W]`
+`[N, 2, 14, 144, 144]`
 
 Channel semantics:
 
 * channel 0: ED;
 * channel 1: ES.
 
-The final values of `D`, `H`, and `W` will be defined after Phase 1 inspection of the real ACDC dataset.
+The input geometry is frozen by Phase 1 and defined in:
+
+```text
+docs/preprocessing_contract.md
+```
 
 The input tensor must already satisfy the frozen preprocessing contract before inference.
 
@@ -102,7 +104,7 @@ medical image
       ↓
 frozen preprocessing pipeline
       ↓
-float32 tensor [N, 2, D, H, W]
+float32 tensor [N, 2, 14, 144, 144]
       ↓
 classifier.onnx
       ↓
@@ -136,7 +138,7 @@ The parity tolerance will be defined after real export and measurement.
 
 The exact ONNX opset is not frozen yet.
 
-Opset 18 may be evaluated as a starting point, but the final version must be compatible with the installed PyTorch, ONNX, and ONNX Runtime stack.
+The final version must be compatible with the installed PyTorch, ONNX, and ONNX Runtime stack.
 
 The selected opset must be recorded here after export validation.
 
@@ -171,7 +173,7 @@ Conceptually:
 ```text
 C++ / ITK preprocessing
         ↓
-float32 [1, 2, D, H, W]
+float32 [1, 2, 14, 144, 144]
         ↓
 ONNX Runtime C++
         ↓
@@ -190,8 +192,7 @@ After ONNX export and parity validation, this document must be updated with:
 
 * final model filename;
 * ONNX opset;
-* fixed `D/H/W`;
-* exact input shape;
+* exact input shape confirmation;
 * exact output shape;
 * class mapping version;
 * preprocessing contract version;
