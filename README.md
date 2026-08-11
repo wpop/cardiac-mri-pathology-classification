@@ -1552,7 +1552,12 @@ as well as:
 
 ## Current Status
 
-**Phase 1 — COMPLETE**
+```text
+Phase 0 — COMPLETE
+Phase 1 — COMPLETE
+Phase 2 — COMPLETE
+Phase 3 — NEXT
+```
 
 Completed so far:
 
@@ -1562,10 +1567,11 @@ Completed so far:
 * initial project configuration defined;
 * `.gitignore` configured;
 * `pyproject.toml` configured;
-* `Makefile` configured.
+* `Makefile` configured;
 * real ACDC Phase 1 inspection completed;
 * preprocessing contract frozen;
-* data-driven ResNet3D18 spatial geometry frozen.
+* data-driven ResNet3D18 spatial geometry frozen;
+* deterministic patient-level 5-fold split artifact generated and validated.
 
 Frozen preprocessing summary:
 
@@ -1588,4 +1594,4 @@ No neural network has been implemented yet.
 
 No training has been performed.
 
-The next phase is **Phase 2 — Dataset Indexing and Patient Splits**.
+The next phase is **Phase 3 — Deterministic Preprocessing**.

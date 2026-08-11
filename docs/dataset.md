@@ -122,6 +122,43 @@ This residual acquisition/padding shortcut risk must be considered during evalua
 
 ---
 
+## Patient Indexing and Splits
+
+Phase 2 indexed the real ACDC training cohort as patient-level classification samples.
+
+Validated indexing facts:
+
+* 100 indexed patients;
+* 20 patients per diagnostic class;
+* one sample identity per patient;
+* ED and ES are paired using `Info.cfg`;
+* required files per patient are `Info.cfg`, standalone ED NIfTI, standalone ES NIfTI, and 4D cine NIfTI;
+* segmentation `*_gt.nii.gz` files are excluded from `AcdcPatient` classification records.
+
+Validated split policy:
+
+* deterministic stratified outer 5-fold split;
+* `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`;
+* each outer fold has 80 train patients and 20 test patients;
+* each train partition has `NOR=16`, `DCM=16`, `HCM=16`, `MINF=16`, `RV=16`;
+* each test fold has `NOR=4`, `DCM=4`, `HCM=4`, `MINF=4`, `RV=4`;
+* every patient appears exactly once across pooled outer test sets;
+* deterministic regeneration passes.
+
+Split artifact:
+
+```text
+artifacts/dataset_splits/acdc_5fold_seed42.json
+```
+
+Artifact SHA-256 after deterministic rebuild:
+
+```text
+ee56ce1b581bb1a3cbfe3e304984248464945ce2f05d84453c8e589b3cf8ebf1
+```
+
+---
+
 ## Data Policy
 
 Do not commit:

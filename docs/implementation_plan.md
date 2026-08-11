@@ -66,21 +66,29 @@ Known residual acquisition/padding shortcut risk remains documented in the prepr
 
 ---
 
-## Phase 2 — Dataset Indexing and Patient Splits — NEXT
+## Phase 2 — Dataset Indexing and Patient Splits — COMPLETE
 
-Implement:
+Phase 2 produced:
 
-* ACDC patient indexing;
-* diagnostic metadata parsing;
-* ED/ES pairing;
-* patient-level representation;
-* stratified 5-fold cross-validation splits.
+* immutable patient-level representation;
+* ACDC metadata parser;
+* deterministic patient index;
+* ED/ES pairing from `Info.cfg`;
+* leakage-safe stratified outer 5-fold splits;
+* deterministic split artifact;
+* automated real-ACDC validation.
 
-All splits must be patient-level and leakage-safe.
+The split artifact is:
+
+```text
+artifacts/dataset_splits/acdc_5fold_seed42.json
+```
+
+All splits are patient-level and leakage-safe.
 
 ---
 
-## Phase 3 — Deterministic Preprocessing
+## Phase 3 — Deterministic Preprocessing — NEXT
 
 Implement the final preprocessing pipeline:
 
