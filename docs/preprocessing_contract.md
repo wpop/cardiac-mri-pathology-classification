@@ -73,6 +73,8 @@ Use linear interpolation for MRI intensities.
 
 The destination grid preserves the physical image center. ED and ES must use the same destination physical grid and identical spatial transformation.
 
+The production implementation uses deterministic nearest-boundary extension for sub-voxel edge samples during interpolation. This boundary behavior does not create artificial pre-normalization padding.
+
 Use the voxel-center convention validated in Phase 1:
 
 ```text

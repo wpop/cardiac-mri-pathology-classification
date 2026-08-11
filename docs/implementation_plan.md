@@ -88,9 +88,9 @@ All splits are patient-level and leakage-safe.
 
 ---
 
-## Phase 3 — Deterministic Preprocessing — NEXT
+## Phase 3 — Deterministic Preprocessing — COMPLETE
 
-Implement the final preprocessing pipeline:
+Phase 3 implemented and validated the final preprocessing pipeline:
 
 ```text
 load NIfTI
@@ -105,7 +105,7 @@ physical resampling
       ↓
 deterministic crop
       ↓
-foreground-aware normalization
+joint valid-data normalization
       ↓
 padding
       ↓
@@ -116,17 +116,17 @@ transpose to [D, H, W]
 float32 tensor
 ```
 
-ED and ES must undergo the same spatial preprocessing.
+ED and ES undergo the same spatial preprocessing grid and crop. The final output contract is `[2, 14, 144, 144]`, `float32`, C-contiguous.
 
-The final preprocessing contract must be documented in:
+Validation artifact:
 
 ```text
-docs/preprocessing_contract.md
+artifacts/preprocessing_validation/phase3_validation.csv
 ```
 
 ---
 
-## Phase 4 — Golden Preprocessing References
+## Phase 4 — Golden Preprocessing References — NEXT
 
 Create deterministic preprocessing references from selected real ACDC patients.
 
