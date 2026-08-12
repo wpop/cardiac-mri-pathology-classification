@@ -26,6 +26,7 @@ dev = [
     "pytest-cov",
     "ruff",
     "mypy",
+    "pandas-stubs",
 ]
 
 [tool.setuptools.packages.find]
