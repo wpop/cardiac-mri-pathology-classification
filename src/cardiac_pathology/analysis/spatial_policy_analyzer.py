@@ -3,8 +3,9 @@
 import json
 import math
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/cardiac_pathology_matplotlib")
 
@@ -13,23 +14,55 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import nibabel as nib
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
 from PIL import Image, ImageDraw, ImageFont
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.model_selection import StratifiedKFold, cross_val_predict
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
+from cardiac_pathology.analysis.typing_helpers import (
+    SpatialImage,
+    image_array,
+    spacing3,
+)
+
+if TYPE_CHECKING:
+    LogisticRegression: Callable[..., object]
+    accuracy_score: Callable[..., float]
+    f1_score: Callable[..., float]
+    StratifiedKFold: Callable[..., object]
+    cross_val_predict: Callable[..., np.ndarray]
+    Pipeline: Callable[..., object]
+    StandardScaler: Callable[..., object]
+else:
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score, f1_score
+    from sklearn.model_selection import StratifiedKFold, cross_val_predict
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
 
 XY_TARGET_SPACINGS_MM = [1.25, 1.50, 1.75]
 XY_REQUESTED_CROPS_MM = [180.0, 200.0, 220.0, 240.0]
 Z_COMMON_SPACINGS_MM = [5.0, 7.5, 10.0]
 Z_TARGET_CENTER_SPANS_MM = [70.0, 80.0, 90.0, 100.0, 110.0]
 Z_NATIVE_TARGET_DEPTHS = [8, 10, 12, 14, 16]
+
+
+class GeometryRow(Protocol):
+    """Static type for geometry rows returned by pandas itertuples."""
+
+    patient_id: str
+    size_x: int
+    size_y: int
+    size_z: int
+    spacing_x_mm: float
+    spacing_y_mm: float
+    spacing_z_mm: float
+
+    def _asdict(self) -> dict[str, object]:
+        """Return namedtuple values as a dictionary."""
+        ...
 
 
 class SpatialPolicyAnalyzer:
@@ -115,7 +148,8 @@ class SpatialPolicyAnalyzer:
     def _simulate_xy_candidates(self, geometry: pd.DataFrame) -> pd.DataFrame:
         """Simulate target XY spacing and centered square physical crops."""
         records: list[dict[str, Any]] = []
-        for row in geometry.itertuples(index=False):
+        for row_object in geometry.itertuples(index=False):
+            row = cast(GeometryRow, row_object)
             for target_spacing in XY_TARGET_SPACINGS_MM:
                 span_x_mm = (row.size_x - 1) * row.spacing_x_mm
                 span_y_mm = (row.size_y - 1) * row.spacing_y_mm
@@ -190,7 +224,8 @@ class SpatialPolicyAnalyzer:
     def _simulate_z_candidates(self, geometry: pd.DataFrame) -> pd.DataFrame:
         """Simulate native-Z and common-Z spacing/depth candidates."""
         records: list[dict[str, Any]] = []
-        for row in geometry.itertuples(index=False):
+        for row_object in geometry.itertuples(index=False):
+            row = cast(GeometryRow, row_object)
             for target_depth in Z_NATIVE_TARGET_DEPTHS:
                 records.append(
                     self._simulate_one_z_candidate(
@@ -334,7 +369,8 @@ class SpatialPolicyAnalyzer:
             "target_center_span_mm"
         ].fillna("native")
 
-        for key, group in z_patient_groupable.groupby(group_columns, sort=True):
+        for key_object, group in z_patient_groupable.groupby(group_columns, sort=True):
+            key = cast(tuple[str, object, object, int], key_object)
             policy, spacing, span, target_depth = key
             metrics = self._run_shortcut_baseline(
                 group=group,
@@ -411,10 +447,9 @@ class SpatialPolicyAnalyzer:
         shortlist = xy_summary.copy()
         shortlist["meets_padding_count_rule"] = shortlist["patients_with_padding"] <= 5
         shortlist["meets_p95_padding_rule"] = shortlist["p95_padding_fraction"] <= 0.02
-        shortlist["practical_rule_count"] = (
-            shortlist["meets_padding_count_rule"].astype(int)
-            + shortlist["meets_p95_padding_rule"].astype(int)
-        )
+        shortlist["practical_rule_count"] = shortlist["meets_padding_count_rule"].astype(
+            int
+        ) + shortlist["meets_p95_padding_rule"].astype(int)
         return (
             shortlist.sort_values(
                 [
@@ -432,19 +467,16 @@ class SpatialPolicyAnalyzer:
 
     def _shortlist_z(self, z_summary: pd.DataFrame) -> pd.DataFrame:
         """Return fixed-criteria top three practical Z candidates."""
-        return (
-            z_summary.sort_values(
-                [
-                    "p95_cropped_fraction",
-                    "patients_with_cropping",
-                    "OOF_macro_f1",
-                    "median_resampling_burden",
-                    "p95_padding_fraction",
-                ],
-                ascending=[True, True, True, True, True],
-            )
-            .head(3)
-        )
+        return z_summary.sort_values(
+            [
+                "p95_cropped_fraction",
+                "patients_with_cropping",
+                "OOF_macro_f1",
+                "median_resampling_burden",
+                "p95_padding_fraction",
+            ],
+            ascending=[True, True, True, True, True],
+        ).head(3)
 
     def _generate_qa_contact_sheet(
         self,
@@ -535,7 +567,9 @@ class SpatialPolicyAnalyzer:
         pad_by_patient = best_patient.groupby("patient_id")["required_padding_slices"].max()
         self._append_unique(selected, [crop_by_patient.sort_values(ascending=False).index[0]])
         self._append_unique(selected, [pad_by_patient.sort_values(ascending=False).index[0]])
-        self._append_unique(selected, [geometry.sort_values("z_center_span_mm").iloc[0]["patient_id"]])
+        self._append_unique(
+            selected, [geometry.sort_values("z_center_span_mm").iloc[0]["patient_id"]]
+        )
         self._append_unique(
             selected,
             [geometry.sort_values("z_center_span_mm", ascending=False).iloc[0]["patient_id"]],
@@ -560,10 +594,16 @@ class SpatialPolicyAnalyzer:
         metadata = self._parse_info_file(patient_dir / "Info.cfg")
         ed_frame = int(metadata["ED"])
         es_frame = int(metadata["ES"])
-        ed_image = nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz")
-        es_image = nib.load(patient_dir / f"{patient_id}_frame{es_frame:02d}.nii.gz")
-        ed = np.asanyarray(ed_image.dataobj)
-        es = np.asanyarray(es_image.dataobj)
+        ed_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz"),
+        )
+        es_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{es_frame:02d}.nii.gz"),
+        )
+        ed = image_array(ed_image)
+        es = image_array(es_image)
         spacing_x, spacing_y, _spacing_z = self._spatial_spacing(ed_image)
         z_index = ed.shape[2] // 2
 
@@ -665,7 +705,7 @@ class SpatialPolicyAnalyzer:
 
     def _plot_full_with_crop(
         self,
-        axis: plt.Axes,
+        axis: Axes,
         image: np.ndarray,
         spacing_x: float,
         spacing_y: float,
@@ -731,7 +771,7 @@ class SpatialPolicyAnalyzer:
         )
         draw = ImageDraw.Draw(sheet)
         try:
-            font = ImageFont.truetype(
+            font: ImageFont.ImageFont | ImageFont.FreeTypeFont = ImageFont.truetype(
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
                 28,
             )
@@ -750,10 +790,9 @@ class SpatialPolicyAnalyzer:
 
     def _write_manifest(self, entries: list[dict[str, str]]) -> None:
         """Write contact-sheet manifest in display order."""
-        lines = [
-            f"{entry['section']}\t{entry['patient_id']}\t{entry['file']}"
-            for entry in entries
-        ]
+        lines: list[str] = []
+        for entry in entries:
+            lines.append(f"{entry['section']}\t{entry['patient_id']}\t{entry['file']}")
         self.qa_manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     def _write_summary_report(
@@ -772,7 +811,8 @@ class SpatialPolicyAnalyzer:
             "Raw 4D cine ED/ES frames exactly match standalone ED/ES arrays.",
             "Acquisition geometry contains measurable diagnosis-related shortcut information.",
             "Geometry-only Z baseline achieved OOF Accuracy 0.390.",
-            "Exact zero, global minimum, and boundary intensity are not reliable background definitions.",
+            "Exact zero, global minimum, and boundary intensity are not reliable "
+            "background definitions.",
             "Temporal-variance and ED-ES connected-component localization are rejected.",
             "Deterministic geometric FOV-center localization is frozen for further Phase 1 work.",
         ]
@@ -812,11 +852,13 @@ class SpatialPolicyAnalyzer:
             & (z_patient["target_D"] == candidate["target_D"])
         ]
         if candidate["policy"] == "native":
-            return rows[rows["target_spacing_z_mm"].isna()]
-        return rows[
+            native_rows: pd.DataFrame = rows[rows["target_spacing_z_mm"].isna()]
+            return native_rows
+        matching_rows: pd.DataFrame = rows[
             (rows["target_spacing_z_mm"] == float(spacing))
             & (rows["target_center_span_mm"] == float(span))
         ]
+        return matching_rows
 
     def _z_candidate_id(self, candidate: pd.Series) -> str:
         """Create a compact file-safe Z candidate identifier."""
@@ -871,10 +913,10 @@ class SpatialPolicyAnalyzer:
 
     def _spatial_spacing(
         self,
-        image: nib.spatialimages.SpatialImage,
+        image: SpatialImage,
     ) -> tuple[float, float, float]:
         """Read image spatial voxel spacing."""
-        return tuple(float(value) for value in image.header.get_zooms()[:3])
+        return spacing3(image)
 
     def _load_class_order(self) -> list[str]:
         """Load authoritative class ordering from the repository config."""

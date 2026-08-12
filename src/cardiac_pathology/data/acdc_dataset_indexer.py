@@ -98,8 +98,7 @@ class AcdcDatasetIndexer:
         expected_indices = set(range(len(mapping)))
         if set(mapping) != expected_indices:
             raise ValueError(
-                "Class mapping indices must be contiguous from 0 to "
-                f"{len(mapping) - 1}: {mapping}"
+                f"Class mapping indices must be contiguous from 0 to {len(mapping) - 1}: {mapping}"
             )
 
         return dict(sorted(mapping.items()))
@@ -107,8 +106,7 @@ class AcdcDatasetIndexer:
     def _load_class_name_to_index(self) -> Mapping[str, int]:
         """Return validated class-name to class-index mapping."""
         return {
-            class_name: class_index
-            for class_index, class_name in self.load_class_mapping().items()
+            class_name: class_index for class_index, class_name in self.load_class_mapping().items()
         }
 
     def _patient_number(self, patient_id: str) -> int:

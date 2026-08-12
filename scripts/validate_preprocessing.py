@@ -213,9 +213,7 @@ def output_validation(dataframe: pd.DataFrame) -> pd.Series:
             "no_xy_padding": int(dataframe["no_xy_padding"].sum()),
             "valid_depth_leq_14": int(dataframe["valid_depth_leq_14"].sum()),
             "no_z_cropping": int(dataframe["no_z_cropping"].sum()),
-            "normalization_std_gt_epsilon": int(
-                dataframe["normalization_std_gt_epsilon"].sum()
-            ),
+            "normalization_std_gt_epsilon": int(dataframe["normalization_std_gt_epsilon"].sum()),
         }
     )
 

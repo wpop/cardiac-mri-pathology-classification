@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/cardiac_pathology_matplotlib")
 
@@ -14,6 +14,12 @@ import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 import pandas as pd
+
+from cardiac_pathology.analysis.typing_helpers import (
+    SpatialImage,
+    image_array,
+    spacing3,
+)
 
 
 class TemporalVarianceLocalizationAnalyzer:
@@ -92,9 +98,9 @@ class TemporalVarianceLocalizationAnalyzer:
             if not path.is_file():
                 raise FileNotFoundError(f"{patient_id}: missing file {path}")
 
-        cine_image = nib.load(cine_path)
-        ed_image = nib.load(ed_path)
-        es_image = nib.load(es_path)
+        cine_image = cast(SpatialImage, nib.load(cine_path))
+        ed_image = cast(SpatialImage, nib.load(ed_path))
+        es_image = cast(SpatialImage, nib.load(es_path))
 
         self._validate_images(
             patient_id=patient_id,
@@ -105,9 +111,9 @@ class TemporalVarianceLocalizationAnalyzer:
             es_index=es_index,
         )
 
-        cine_array = np.asanyarray(cine_image.dataobj)
-        ed_array = np.asanyarray(ed_image.dataobj)
-        es_array = np.asanyarray(es_image.dataobj)
+        cine_array = image_array(cine_image)
+        ed_array = image_array(ed_image)
+        es_array = image_array(es_image)
 
         if not np.array_equal(cine_array[..., ed_index], ed_array):
             raise ValueError(f"{patient_id}: raw cine ED frame does not equal ED volume")
@@ -142,9 +148,9 @@ class TemporalVarianceLocalizationAnalyzer:
     def _validate_images(
         self,
         patient_id: str,
-        cine_image: nib.spatialimages.SpatialImage,
-        ed_image: nib.spatialimages.SpatialImage,
-        es_image: nib.spatialimages.SpatialImage,
+        cine_image: SpatialImage,
+        ed_image: SpatialImage,
+        es_image: SpatialImage,
         ed_index: int,
         es_index: int,
     ) -> None:
@@ -180,8 +186,7 @@ class TemporalVarianceLocalizationAnalyzer:
 
         if ed_image.shape != es_image.shape:
             raise ValueError(
-                f"{patient_id}: ED/ES shape mismatch: "
-                f"{ed_image.shape} != {es_image.shape}"
+                f"{patient_id}: ED/ES shape mismatch: {ed_image.shape} != {es_image.shape}"
             )
 
         if self._spatial_spacing(ed_image) != self._spatial_spacing(es_image):
@@ -244,12 +249,10 @@ class TemporalVarianceLocalizationAnalyzer:
         offset_x_mm = abs(centroid_x_vox - center_x_vox) * spacing_x
         offset_y_mm = abs(centroid_y_vox - center_y_vox) * spacing_y
         required_half_width_mm = (
-            max(abs(min_x_vox - center_x_vox), abs(max_x_vox - center_x_vox))
-            * spacing_x
+            max(abs(min_x_vox - center_x_vox), abs(max_x_vox - center_x_vox)) * spacing_x
         )
         required_half_height_mm = (
-            max(abs(min_y_vox - center_y_vox), abs(max_y_vox - center_y_vox))
-            * spacing_y
+            max(abs(min_y_vox - center_y_vox), abs(max_y_vox - center_y_vox)) * spacing_y
         )
 
         return {
@@ -296,8 +299,7 @@ class TemporalVarianceLocalizationAnalyzer:
                 class_dataframe["tv05_euclidean_offset_mm"] - cohort_median_offset
             ).abs()
             patient_id = str(
-                class_dataframe.sort_values("offset_distance_to_median")
-                .iloc[0]["patient_id"]
+                class_dataframe.sort_values("offset_distance_to_median").iloc[0]["patient_id"]
             )
             self._append_unique(selected, [patient_id])
 
@@ -308,10 +310,13 @@ class TemporalVarianceLocalizationAnalyzer:
         patient_dir = self.dataset_dir / patient_id
         metadata = self._parse_info_file(patient_dir / "Info.cfg")
         ed_frame = int(metadata["ED"])
-        cine_image = nib.load(patient_dir / f"{patient_id}_4d.nii.gz")
-        ed_image = nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz")
-        cine_array = np.asanyarray(cine_image.dataobj)
-        ed_array = np.asanyarray(ed_image.dataobj)
+        cine_image = cast(SpatialImage, nib.load(patient_dir / f"{patient_id}_4d.nii.gz"))
+        ed_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz"),
+        )
+        cine_array = image_array(cine_image)
+        ed_array = image_array(ed_image)
         temporal_variance = np.var(cine_array, axis=3, dtype=np.float64)
         positive_variance = temporal_variance[temporal_variance > 0]
         threshold = np.percentile(positive_variance, 95.0)
@@ -431,10 +436,10 @@ class TemporalVarianceLocalizationAnalyzer:
 
     def _spatial_spacing(
         self,
-        image: nib.spatialimages.SpatialImage,
+        image: SpatialImage,
     ) -> tuple[float, float, float]:
         """Read image spatial voxel spacing."""
-        return tuple(float(value) for value in image.header.get_zooms()[:3])
+        return spacing3(image)
 
     def _append_unique(self, selected: list[str], patient_ids: list[str]) -> None:
         """Append patient IDs while preserving order and uniqueness."""

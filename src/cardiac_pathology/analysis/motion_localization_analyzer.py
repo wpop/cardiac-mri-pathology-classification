@@ -1,8 +1,9 @@
 """Compact deterministic motion-localization analysis for real ACDC cine MRI."""
 
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/cardiac_pathology_matplotlib")
 
@@ -11,12 +12,24 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import nibabel as nib
 import numpy as np
 import pandas as pd
-from scipy import ndimage
+from matplotlib.axes import Axes
+from matplotlib.patches import Rectangle
 
+from cardiac_pathology.analysis.typing_helpers import (
+    SpatialImage,
+    image_array,
+    spacing3,
+)
+
+if TYPE_CHECKING:
+    ndimage_label: Callable[..., tuple[np.ndarray, int]]
+    ndimage_sum: Callable[..., np.ndarray]
+else:
+    from scipy.ndimage import label as ndimage_label
+    from scipy.ndimage import sum as ndimage_sum
 
 THRESHOLDS: tuple[tuple[str, float], ...] = (
     ("p95", 95.0),
@@ -136,9 +149,9 @@ class MotionLocalizationAnalyzer:
             if not path.is_file():
                 raise FileNotFoundError(f"{patient_id}: missing file {path}")
 
-        cine_image = nib.load(cine_path)
-        ed_image = nib.load(ed_path)
-        es_image = nib.load(es_path)
+        cine_image = cast(SpatialImage, nib.load(cine_path))
+        ed_image = cast(SpatialImage, nib.load(ed_path))
+        es_image = cast(SpatialImage, nib.load(es_path))
         self._validate_images(
             patient_id=patient_id,
             cine_image=cine_image,
@@ -148,9 +161,9 @@ class MotionLocalizationAnalyzer:
             es_index=es_index,
         )
 
-        cine_array = np.asanyarray(cine_image.dataobj)
-        ed_array = np.asanyarray(ed_image.dataobj)
-        es_array = np.asanyarray(es_image.dataobj)
+        cine_array = image_array(cine_image)
+        ed_array = image_array(ed_image)
+        es_array = image_array(es_image)
         if not np.array_equal(cine_array[..., ed_index], ed_array):
             raise ValueError(f"{patient_id}: raw cine ED frame does not equal ED volume")
         if not np.array_equal(cine_array[..., es_index], es_array):
@@ -159,9 +172,7 @@ class MotionLocalizationAnalyzer:
         spacing_x, spacing_y, _spacing_z = self._spatial_spacing(ed_image)
         temporal_variance = np.var(cine_array, axis=3, dtype=np.float64)
         temporal_energy_xy = temporal_variance.sum(axis=2, dtype=np.float64)
-        absolute_difference = np.abs(
-            ed_array.astype(np.float64) - es_array.astype(np.float64)
-        )
+        absolute_difference = np.abs(ed_array.astype(np.float64) - es_array.astype(np.float64))
         edes_energy_xy = absolute_difference.sum(axis=2, dtype=np.float64)
 
         record: dict[str, Any] = {
@@ -240,19 +251,20 @@ class MotionLocalizationAnalyzer:
         """Select the 8-connected threshold component with largest energy sum."""
         threshold_mask = energy_xy >= threshold
         structure = np.ones((3, 3), dtype=int)
-        labels, component_count = ndimage.label(threshold_mask, structure=structure)
+        labels, component_count = ndimage_label(threshold_mask, structure=structure)
 
         if component_count == 0:
             raise ValueError("No connected components found after thresholding")
 
-        component_energies = ndimage.sum(
+        component_energies = ndimage_sum(
             energy_xy,
             labels=labels,
             index=np.arange(1, component_count + 1),
         )
         selected_label = int(np.argmax(component_energies) + 1)
 
-        return labels == selected_label
+        component_mask: np.ndarray = labels == selected_label
+        return component_mask
 
     def _measure_component(
         self,
@@ -280,25 +292,19 @@ class MotionLocalizationAnalyzer:
         offset_x_mm = abs(centroid_x_vox - center_x_vox) * spacing_x
         offset_y_mm = abs(centroid_y_vox - center_y_vox) * spacing_y
         required_half_width_mm = (
-            max(abs(min_x_vox - center_x_vox), abs(max_x_vox - center_x_vox))
-            * spacing_x
+            max(abs(min_x_vox - center_x_vox), abs(max_x_vox - center_x_vox)) * spacing_x
         )
         required_half_height_mm = (
-            max(abs(min_y_vox - center_y_vox), abs(max_y_vox - center_y_vox))
-            * spacing_y
+            max(abs(min_y_vox - center_y_vox), abs(max_y_vox - center_y_vox)) * spacing_y
         )
 
         return {
             f"{prefix}_component_area_pixels": component_area_pixels,
-            f"{prefix}_component_area_mm2": component_area_pixels
-            * spacing_x
-            * spacing_y,
-            f"{prefix}_component_area_fraction": component_area_pixels
-            / float(size_x * size_y),
+            f"{prefix}_component_area_mm2": component_area_pixels * spacing_x * spacing_y,
+            f"{prefix}_component_area_fraction": component_area_pixels / float(size_x * size_y),
             f"{prefix}_component_energy": component_energy,
             f"{prefix}_total_map_energy": total_map_energy,
-            f"{prefix}_component_energy_fraction": component_energy
-            / total_map_energy,
+            f"{prefix}_component_energy_fraction": component_energy / total_map_energy,
             f"{prefix}_centroid_x_vox": centroid_x_vox,
             f"{prefix}_centroid_y_vox": centroid_y_vox,
             f"{prefix}_offset_x_mm": offset_x_mm,
@@ -352,9 +358,9 @@ class MotionLocalizationAnalyzer:
                     dataframe[f"{method_name}_{start}_centroid_y_vox"]
                     - dataframe[f"{method_name}_{end}_centroid_y_vox"]
                 ) * dataframe["spacing_y_mm"]
-                dataframe[
-                    f"{method_name}_centroid_displacement_{label}_mm"
-                ] = np.hypot(dx_mm, dy_mm)
+                dataframe[f"{method_name}_centroid_displacement_{label}_mm"] = np.hypot(
+                    dx_mm, dy_mm
+                )
 
         return dataframe
 
@@ -394,8 +400,7 @@ class MotionLocalizationAnalyzer:
                 class_dataframe["p975_centroid_agreement_mm"] - median_agreement
             ).abs()
             patient_id = str(
-                class_dataframe.sort_values("agreement_distance_to_median")
-                .iloc[0]["patient_id"]
+                class_dataframe.sort_values("agreement_distance_to_median").iloc[0]["patient_id"]
             )
             self._append_unique(selected, [patient_id])
 
@@ -407,18 +412,24 @@ class MotionLocalizationAnalyzer:
         metadata = self._parse_info_file(patient_dir / "Info.cfg")
         ed_frame = int(metadata["ED"])
         es_frame = int(metadata["ES"])
-        cine_image = nib.load(patient_dir / f"{patient_id}_4d.nii.gz")
-        ed_image = nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz")
-        es_image = nib.load(patient_dir / f"{patient_id}_frame{es_frame:02d}.nii.gz")
-        cine_array = np.asanyarray(cine_image.dataobj)
-        ed_array = np.asanyarray(ed_image.dataobj)
-        es_array = np.asanyarray(es_image.dataobj)
+        cine_image = cast(SpatialImage, nib.load(patient_dir / f"{patient_id}_4d.nii.gz"))
+        ed_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz"),
+        )
+        es_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{es_frame:02d}.nii.gz"),
+        )
+        cine_array = image_array(cine_image)
+        ed_array = image_array(ed_image)
+        es_array = image_array(es_image)
         spacing_x, spacing_y, _spacing_z = self._spatial_spacing(ed_image)
         temporal_variance = np.var(cine_array, axis=3, dtype=np.float64)
         tv_energy_xy = temporal_variance.sum(axis=2, dtype=np.float64)
-        edes_energy_xy = np.abs(
-            ed_array.astype(np.float64) - es_array.astype(np.float64)
-        ).sum(axis=2, dtype=np.float64)
+        edes_energy_xy = np.abs(ed_array.astype(np.float64) - es_array.astype(np.float64)).sum(
+            axis=2, dtype=np.float64
+        )
         tv_component = self._largest_energy_component(
             tv_energy_xy,
             np.percentile(tv_energy_xy[tv_energy_xy > 0], 97.5),
@@ -486,7 +497,7 @@ class MotionLocalizationAnalyzer:
 
     def _draw_qa_markers(
         self,
-        axis: plt.Axes,
+        axis: Axes,
         size_x: int,
         size_y: int,
         tv_measurements: dict[str, float | int],
@@ -516,7 +527,7 @@ class MotionLocalizationAnalyzer:
 
     def _draw_component_box(
         self,
-        axis: plt.Axes,
+        axis: Axes,
         size_y: int,
         measurements: dict[str, float | int],
         prefix: str,
@@ -540,7 +551,7 @@ class MotionLocalizationAnalyzer:
 
     def _draw_centroid(
         self,
-        axis: plt.Axes,
+        axis: Axes,
         size_y: int,
         measurements: dict[str, float | int],
         prefix: str,
@@ -623,9 +634,9 @@ class MotionLocalizationAnalyzer:
     def _validate_images(
         self,
         patient_id: str,
-        cine_image: nib.spatialimages.SpatialImage,
-        ed_image: nib.spatialimages.SpatialImage,
-        es_image: nib.spatialimages.SpatialImage,
+        cine_image: SpatialImage,
+        ed_image: SpatialImage,
+        es_image: SpatialImage,
         ed_index: int,
         es_index: int,
     ) -> None:
@@ -657,8 +668,7 @@ class MotionLocalizationAnalyzer:
             )
         if ed_image.shape != es_image.shape:
             raise ValueError(
-                f"{patient_id}: ED/ES shape mismatch: "
-                f"{ed_image.shape} != {es_image.shape}"
+                f"{patient_id}: ED/ES shape mismatch: {ed_image.shape} != {es_image.shape}"
             )
         if self._spatial_spacing(ed_image) != self._spatial_spacing(es_image):
             raise ValueError(
@@ -679,10 +689,10 @@ class MotionLocalizationAnalyzer:
 
     def _spatial_spacing(
         self,
-        image: nib.spatialimages.SpatialImage,
+        image: SpatialImage,
     ) -> tuple[float, float, float]:
         """Read image spatial voxel spacing."""
-        return tuple(float(value) for value in image.header.get_zooms()[:3])
+        return spacing3(image)
 
     def _append_unique(self, selected: list[str], patient_ids: list[str]) -> None:
         """Append patient IDs while preserving order and uniqueness."""

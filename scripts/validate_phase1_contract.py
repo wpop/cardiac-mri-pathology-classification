@@ -35,15 +35,13 @@ def main() -> None:
     class_mapping = json.loads(
         (REPOSITORY_ROOT / "configs/class_mapping.json").read_text(encoding="utf-8")
     )
-    config = yaml.safe_load(
-        (REPOSITORY_ROOT / "configs/default.yaml").read_text(encoding="utf-8")
+    config = yaml.safe_load((REPOSITORY_ROOT / "configs/default.yaml").read_text(encoding="utf-8"))
+    preprocessing_contract = (REPOSITORY_ROOT / "docs/preprocessing_contract.md").read_text(
+        encoding="utf-8"
     )
-    preprocessing_contract = (
-        REPOSITORY_ROOT / "docs/preprocessing_contract.md"
-    ).read_text(encoding="utf-8")
-    onnx_contract = (
-        REPOSITORY_ROOT / "docs/onnx_deployment_contract.md"
-    ).read_text(encoding="utf-8")
+    onnx_contract = (REPOSITORY_ROOT / "docs/onnx_deployment_contract.md").read_text(
+        encoding="utf-8"
+    )
 
     assert class_mapping == EXPECTED_CLASSES, class_mapping
     assert config["preprocessing"]["target_shape"] == {"d": 14, "h": 144, "w": 144}

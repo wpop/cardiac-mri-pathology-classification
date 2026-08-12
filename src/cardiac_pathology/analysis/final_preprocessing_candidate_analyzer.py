@@ -3,8 +3,9 @@
 import json
 import math
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/cardiac_pathology_matplotlib")
 
@@ -17,13 +18,31 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
-from scipy.ndimage import map_coordinates
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.model_selection import StratifiedKFold, cross_val_predict
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
+from cardiac_pathology.analysis.typing_helpers import (
+    SpatialImage,
+    image_array,
+    orientation_codes,
+    shape3,
+    spacing3,
+)
+
+if TYPE_CHECKING:
+    map_coordinates: Callable[..., np.ndarray]
+    LogisticRegression: Callable[..., object]
+    accuracy_score: Callable[..., float]
+    f1_score: Callable[..., float]
+    StratifiedKFold: Callable[..., object]
+    cross_val_predict: Callable[..., np.ndarray]
+    Pipeline: Callable[..., object]
+    StandardScaler: Callable[..., object]
+else:
+    from scipy.ndimage import map_coordinates
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score, f1_score
+    from sklearn.model_selection import StratifiedKFold, cross_val_predict
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler
 
 TARGET_SPACING_MM = (1.50, 1.50, 7.50)
 TARGET_XY_PIXELS = 144
@@ -64,7 +83,9 @@ class FinalPreprocessingCandidateAnalyzer:
         if not patient_dirs:
             raise RuntimeError(f"No patient directories found in {self.dataset_dir}")
 
-        records = [self._process_patient(patient_dir, keep_tensor=False) for patient_dir in patient_dirs]
+        records = [
+            self._process_patient(patient_dir, keep_tensor=False) for patient_dir in patient_dirs
+        ]
         dataframe = pd.DataFrame(records)
         dataframe.to_csv(self.output_csv, index=False)
 
@@ -132,14 +153,20 @@ class FinalPreprocessingCandidateAnalyzer:
         es_frame = int(metadata["ES"])
         class_name = metadata["Group"]
 
-        ed_image = nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz")
-        es_image = nib.load(patient_dir / f"{patient_id}_frame{es_frame:02d}.nii.gz")
+        ed_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{ed_frame:02d}.nii.gz"),
+        )
+        es_image = cast(
+            SpatialImage,
+            nib.load(patient_dir / f"{patient_id}_frame{es_frame:02d}.nii.gz"),
+        )
         self._validate_source_images(patient_id, ed_image, es_image)
 
-        ed_source = np.asanyarray(ed_image.dataobj)
-        es_source = np.asanyarray(es_image.dataobj)
+        ed_source = image_array(ed_image)
+        es_source = image_array(es_image)
         source_spacing = self._spatial_spacing(ed_image)
-        resampled_shape = self._target_size_from_center_span(ed_image.shape, source_spacing)
+        resampled_shape = self._target_size_from_center_span(shape3(ed_image.shape), source_spacing)
         ed_resampled = self._resample_to_target_grid(ed_source, source_spacing, resampled_shape)
         es_resampled = self._resample_to_target_grid(es_source, source_spacing, resampled_shape)
 
@@ -224,8 +251,8 @@ class FinalPreprocessingCandidateAnalyzer:
     def _validate_source_images(
         self,
         patient_id: str,
-        ed_image: nib.spatialimages.SpatialImage,
-        es_image: nib.spatialimages.SpatialImage,
+        ed_image: SpatialImage,
+        es_image: SpatialImage,
     ) -> None:
         """Validate standalone ED/ES source image geometry."""
         if len(ed_image.shape) != 3 or len(es_image.shape) != 3:
@@ -234,8 +261,8 @@ class FinalPreprocessingCandidateAnalyzer:
             raise ValueError(f"{patient_id}: ED/ES shape mismatch")
         if self._spatial_spacing(ed_image) != self._spatial_spacing(es_image):
             raise ValueError(f"{patient_id}: ED/ES spacing mismatch")
-        ed_orientation = "".join(nib.aff2axcodes(ed_image.affine))
-        es_orientation = "".join(nib.aff2axcodes(es_image.affine))
+        ed_orientation = "".join(orientation_codes(ed_image))
+        es_orientation = "".join(orientation_codes(es_image))
         if ed_orientation != "LPS" or es_orientation != "LPS":
             raise ValueError(
                 f"{patient_id}: expected standalone LPS orientation, got "
@@ -260,13 +287,14 @@ class FinalPreprocessingCandidateAnalyzer:
             coordinate_axes.append(coordinates)
 
         grid = np.meshgrid(*coordinate_axes, indexing="ij")
-        return map_coordinates(
+        resampled: np.ndarray = map_coordinates(
             source.astype(np.float64),
             grid,
             order=1,
             mode="nearest",
             prefilter=False,
         )
+        return resampled
 
     def _center_crop_xy(
         self,
@@ -276,9 +304,7 @@ class FinalPreprocessingCandidateAnalyzer:
         """Apply deterministic FOV-centered XY crop without padding."""
         size_x, size_y, _size_z = volume.shape
         if size_x < TARGET_XY_PIXELS or size_y < TARGET_XY_PIXELS:
-            raise ValueError(
-                f"{patient_id}: XY padding required, resampled XY={size_x}x{size_y}"
-            )
+            raise ValueError(f"{patient_id}: XY padding required, resampled XY={size_x}x{size_y}")
         crop_x = size_x - TARGET_XY_PIXELS
         crop_y = size_y - TARGET_XY_PIXELS
         x_lower = crop_x // 2
@@ -410,9 +436,7 @@ class FinalPreprocessingCandidateAnalyzer:
                         dataframe["joint_valid_mean_after_normalization"].abs().max()
                     ),
                     "max_abs_joint_std_deviation": float(
-                        (dataframe["joint_valid_std_after_normalization"] - 1.0)
-                        .abs()
-                        .max()
+                        (dataframe["joint_valid_std_after_normalization"] - 1.0).abs().max()
                     ),
                     "all_joint_means_within_tolerance": bool(
                         (
@@ -422,17 +446,12 @@ class FinalPreprocessingCandidateAnalyzer:
                     ),
                     "all_joint_stds_within_tolerance": bool(
                         (
-                            (
-                                dataframe["joint_valid_std_after_normalization"]
-                                - 1.0
-                            ).abs()
+                            (dataframe["joint_valid_std_after_normalization"] - 1.0).abs()
                             <= VALIDATION_TOLERANCE
                         ).all()
                     ),
                     "normalization_std_min": float(dataframe["normalization_std"].min()),
-                    "normalization_std_median": float(
-                        dataframe["normalization_std"].median()
-                    ),
+                    "normalization_std_median": float(dataframe["normalization_std"].median()),
                     "normalization_std_max": float(dataframe["normalization_std"].max()),
                 }
             ),
@@ -451,9 +470,7 @@ class FinalPreprocessingCandidateAnalyzer:
                         ).sum()
                     ),
                     "z_cropping_failures": int((dataframe["z_cropping_total"] > 0).sum()),
-                    "std_epsilon_failures": int(
-                        (~dataframe["normalization_std_gt_epsilon"]).sum()
-                    ),
+                    "std_epsilon_failures": int((~dataframe["normalization_std_gt_epsilon"]).sum()),
                 }
             ),
         }
@@ -484,22 +501,16 @@ class FinalPreprocessingCandidateAnalyzer:
             dataframe.nsmallest(5, "z_padding_fraction")["patient_id"].tolist(),
         )
         xy_spacing = dataframe.assign(
-            mean_xy_spacing=(
-                dataframe["source_spacing_x_mm"] + dataframe["source_spacing_y_mm"]
-            )
+            mean_xy_spacing=(dataframe["source_spacing_x_mm"] + dataframe["source_spacing_y_mm"])
             / 2
         )
         self._append_unique(
             selected,
             [
                 xy_spacing.sort_values("mean_xy_spacing").iloc[0]["patient_id"],
-                xy_spacing.sort_values("mean_xy_spacing", ascending=False).iloc[0][
-                    "patient_id"
-                ],
+                xy_spacing.sort_values("mean_xy_spacing", ascending=False).iloc[0]["patient_id"],
                 dataframe.sort_values("source_spacing_z_mm").iloc[0]["patient_id"],
-                dataframe.sort_values("source_spacing_z_mm", ascending=False).iloc[0][
-                    "patient_id"
-                ],
+                dataframe.sort_values("source_spacing_z_mm", ascending=False).iloc[0]["patient_id"],
             ],
         )
         for class_name in sorted(dataframe["class"].unique()):
@@ -575,7 +586,7 @@ class FinalPreprocessingCandidateAnalyzer:
         )
         draw = ImageDraw.Draw(sheet)
         try:
-            font = ImageFont.truetype(
+            font: ImageFont.ImageFont | ImageFont.FreeTypeFont = ImageFont.truetype(
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
                 28,
             )
@@ -663,13 +674,20 @@ class FinalPreprocessingCandidateAnalyzer:
         source_spacing: tuple[float, float, float],
     ) -> tuple[int, int, int]:
         """Reuse center-span convention: round(span / target_spacing) + 1."""
-        return tuple(
-            max(
-                1,
-                int(round(((source_shape[axis] - 1) * source_spacing[axis]) / TARGET_SPACING_MM[axis]))
-                + 1,
+        return shape3(
+            tuple(
+                max(
+                    1,
+                    int(
+                        round(
+                            ((source_shape[axis] - 1) * source_spacing[axis])
+                            / TARGET_SPACING_MM[axis]
+                        )
+                    )
+                    + 1,
+                )
+                for axis in range(3)
             )
-            for axis in range(3)
         )
 
     def _six_number_summary(self, series: pd.Series) -> pd.Series:
@@ -696,10 +714,10 @@ class FinalPreprocessingCandidateAnalyzer:
 
     def _spatial_spacing(
         self,
-        image: nib.spatialimages.SpatialImage,
+        image: SpatialImage,
     ) -> tuple[float, float, float]:
         """Read image spatial voxel spacing."""
-        return tuple(float(value) for value in image.header.get_zooms()[:3])
+        return spacing3(image)
 
     def _load_class_order(self) -> list[str]:
         """Load authoritative class ordering from config."""

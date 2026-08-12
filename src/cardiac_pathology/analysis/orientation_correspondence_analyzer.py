@@ -4,11 +4,22 @@ from collections import Counter
 from dataclasses import dataclass
 from itertools import permutations, product
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
+
+from cardiac_pathology.analysis.typing_helpers import (
+    SpatialImage,
+    apply_orientation,
+    image_array,
+    orientation_codes,
+    orientation_transform,
+    shape3,
+    spacing3,
+    tuple3,
+)
 
 
 @dataclass(frozen=True)
@@ -92,10 +103,7 @@ class OrientationCorrespondenceAnalyzer:
                 "orientation-only transforms."
             )
         else:
-            print(
-                "FAIL: one or more patients do not have proven exact ED/ES "
-                "correspondence."
-            )
+            print("FAIL: one or more patients do not have proven exact ED/ES correspondence.")
             if not failing_rows.empty:
                 print("Failing patients:")
                 for row in failing_rows.itertuples(index=False):
@@ -121,9 +129,9 @@ class OrientationCorrespondenceAnalyzer:
             if not path.is_file():
                 raise FileNotFoundError(f"{patient_id}: missing file {path}")
 
-        cine_image = nib.load(cine_path)
-        ed_image = nib.load(ed_path)
-        es_image = nib.load(es_path)
+        cine_image = cast(SpatialImage, nib.load(cine_path))
+        ed_image = cast(SpatialImage, nib.load(ed_path))
+        es_image = cast(SpatialImage, nib.load(es_path))
 
         self._validate_images(
             patient_id=patient_id,
@@ -134,9 +142,9 @@ class OrientationCorrespondenceAnalyzer:
             es_frame=es_frame,
         )
 
-        cine_array = np.asanyarray(cine_image.dataobj)
-        ed_array = np.asanyarray(ed_image.dataobj)
-        es_array = np.asanyarray(es_image.dataobj)
+        cine_array = image_array(cine_image)
+        ed_array = image_array(ed_image)
+        es_array = image_array(es_image)
         cine_ed = cine_array[..., ed_frame - 1]
         cine_es = cine_array[..., es_frame - 1]
 
@@ -158,9 +166,9 @@ class OrientationCorrespondenceAnalyzer:
             "class": group,
             "ed_frame": ed_frame,
             "es_frame": es_frame,
-            "cine_orientation": "".join(nib.aff2axcodes(cine_image.affine)),
-            "ed_orientation": "".join(nib.aff2axcodes(ed_image.affine)),
-            "es_orientation": "".join(nib.aff2axcodes(es_image.affine)),
+            "cine_orientation": "".join(orientation_codes(cine_image)),
+            "ed_orientation": "".join(orientation_codes(ed_image)),
+            "es_orientation": "".join(orientation_codes(es_image)),
             "ed_direct_shape_equal": ed_result.direct_shape_equal,
             "es_direct_shape_equal": es_result.direct_shape_equal,
             "ed_direct_match": ed_result.direct_match,
@@ -180,9 +188,9 @@ class OrientationCorrespondenceAnalyzer:
     def _validate_images(
         self,
         patient_id: str,
-        cine_image: nib.spatialimages.SpatialImage,
-        ed_image: nib.spatialimages.SpatialImage,
-        es_image: nib.spatialimages.SpatialImage,
+        cine_image: SpatialImage,
+        ed_image: SpatialImage,
+        es_image: SpatialImage,
         ed_frame: int,
         es_frame: int,
     ) -> None:
@@ -209,22 +217,17 @@ class OrientationCorrespondenceAnalyzer:
         es_spacing = self._spatial_spacing(es_image)
         if ed_image.shape != es_image.shape:
             raise ValueError(
-                f"{patient_id}: ED/ES shape mismatch: "
-                f"{ed_image.shape} != {es_image.shape}"
+                f"{patient_id}: ED/ES shape mismatch: {ed_image.shape} != {es_image.shape}"
             )
 
         if ed_spacing != es_spacing:
-            raise ValueError(
-                f"{patient_id}: ED/ES spacing mismatch: "
-                f"{ed_spacing} != {es_spacing}"
-            )
+            raise ValueError(f"{patient_id}: ED/ES spacing mismatch: {ed_spacing} != {es_spacing}")
 
-        ed_orientation = nib.aff2axcodes(ed_image.affine)
-        es_orientation = nib.aff2axcodes(es_image.affine)
+        ed_orientation = orientation_codes(ed_image)
+        es_orientation = orientation_codes(es_image)
         if ed_orientation != es_orientation:
             raise ValueError(
-                f"{patient_id}: ED/ES orientation mismatch: "
-                f"{ed_orientation} != {es_orientation}"
+                f"{patient_id}: ED/ES orientation mismatch: {ed_orientation} != {es_orientation}"
             )
 
         self._validate_compatible_spatial_metadata(
@@ -243,14 +246,14 @@ class OrientationCorrespondenceAnalyzer:
     def _validate_compatible_spatial_metadata(
         self,
         patient_id: str,
-        cine_image: nib.spatialimages.SpatialImage,
-        standalone_image: nib.spatialimages.SpatialImage,
+        cine_image: SpatialImage,
+        standalone_image: SpatialImage,
         frame_name: str,
     ) -> None:
         """Check cine and standalone spatial shape/spacing after orientation."""
         transform = self._orientation_transform(cine_image, standalone_image)
         transformed_shape = self._shape_after_orientation(
-            cine_image.shape[:3],
+            shape3(cine_image.shape[:3]),
             transform,
         )
         transformed_spacing = self._spacing_after_orientation(
@@ -277,16 +280,16 @@ class OrientationCorrespondenceAnalyzer:
         self,
         cine_frame: np.ndarray,
         standalone_frame: np.ndarray,
-        cine_image: nib.spatialimages.SpatialImage,
-        standalone_image: nib.spatialimages.SpatialImage,
+        cine_image: SpatialImage,
+        standalone_image: SpatialImage,
     ) -> CorrespondenceResult:
         """Compare one extracted cine frame to one standalone volume."""
         direct_shape_equal = cine_frame.shape == standalone_frame.shape
         direct_match = direct_shape_equal and np.array_equal(cine_frame, standalone_frame)
 
         transform = self._orientation_transform(cine_image, standalone_image)
-        transformed_frame = nib.orientations.apply_orientation(cine_frame, transform)
-        transformed_shape = tuple(int(value) for value in transformed_frame.shape)
+        transformed_frame = apply_orientation(cine_frame, transform)
+        transformed_shape = shape3(tuple(int(value) for value in transformed_frame.shape))
         transformed_shape_equal = transformed_frame.shape == standalone_frame.shape
         nib_orientation_match = transformed_shape_equal and np.array_equal(
             transformed_frame,
@@ -347,13 +350,11 @@ class OrientationCorrespondenceAnalyzer:
 
     def _orientation_transform(
         self,
-        source_image: nib.spatialimages.SpatialImage,
-        target_image: nib.spatialimages.SpatialImage,
+        source_image: SpatialImage,
+        target_image: SpatialImage,
     ) -> np.ndarray:
         """Derive the orientation transform from source image to target image."""
-        source_orientation = nib.orientations.io_orientation(source_image.affine)
-        target_orientation = nib.orientations.io_orientation(target_image.affine)
-        return nib.orientations.ornt_transform(source_orientation, target_orientation)
+        return orientation_transform(source_image, target_image)
 
     def _shape_after_orientation(
         self,
@@ -362,7 +363,7 @@ class OrientationCorrespondenceAnalyzer:
     ) -> tuple[int, int, int]:
         """Calculate the spatial shape after an orientation transform."""
         transformed_axes = np.argsort(transform[:, 0].astype(int))
-        return tuple(int(shape[axis]) for axis in transformed_axes)
+        return shape3(tuple(int(shape[axis]) for axis in transformed_axes))
 
     def _spacing_after_orientation(
         self,
@@ -371,7 +372,7 @@ class OrientationCorrespondenceAnalyzer:
     ) -> tuple[float, float, float]:
         """Calculate voxel spacing after an orientation transform."""
         transformed_axes = np.argsort(transform[:, 0].astype(int))
-        return tuple(float(spacing[axis]) for axis in transformed_axes)
+        return tuple3(tuple(float(spacing[axis]) for axis in transformed_axes))
 
     def _max_abs_diff(
         self,
@@ -401,10 +402,7 @@ class OrientationCorrespondenceAnalyzer:
             )
         )
 
-        return "\n".join(
-            f"  {pair}: {count}"
-            for pair, count in sorted(pair_counts.items())
-        )
+        return "\n".join(f"  {pair}: {count}" for pair, count in sorted(pair_counts.items()))
 
     def _status_counts(
         self,
@@ -416,21 +414,15 @@ class OrientationCorrespondenceAnalyzer:
         direct_count = int(dataframe[f"{prefix}_direct_match"].sum())
         nib_count = int(dataframe[f"{prefix}_nib_orientation_match"].sum())
         fallback_count = int(
-            (dataframe[f"{prefix}_correspondence_status"] == "fallback_orientation")
-            .sum()
+            (dataframe[f"{prefix}_correspondence_status"] == "fallback_orientation").sum()
         )
-        ambiguous_count = int(
-            (dataframe[f"{prefix}_correspondence_status"] == "ambiguous").sum()
-        )
-        failed_count = int(
-            (dataframe[f"{prefix}_correspondence_status"] == "failed").sum()
-        )
+        ambiguous_count = int((dataframe[f"{prefix}_correspondence_status"] == "ambiguous").sum())
+        failed_count = int((dataframe[f"{prefix}_correspondence_status"] == "failed").sum())
 
         return "\n".join(
             [
                 f"  direct exact match: {direct_count} / {patient_count}",
-                "  exact match after NiBabel orientation transform: "
-                f"{nib_count} / {patient_count}",
+                f"  exact match after NiBabel orientation transform: {nib_count} / {patient_count}",
                 "  exact match only through fallback permutation/flip search: "
                 f"{fallback_count} / {patient_count}",
                 f"  ambiguous: {ambiguous_count} / {patient_count}",
@@ -440,10 +432,10 @@ class OrientationCorrespondenceAnalyzer:
 
     def _spatial_spacing(
         self,
-        image: nib.spatialimages.SpatialImage,
+        image: SpatialImage,
     ) -> tuple[float, float, float]:
         """Read image spatial voxel spacing."""
-        return tuple(float(value) for value in image.header.get_zooms()[:3])
+        return spacing3(image)
 
     def _parse_info_file(self, info_path: Path) -> dict[str, str]:
         """Read key-value metadata from one ACDC Info.cfg file."""

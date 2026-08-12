@@ -123,10 +123,9 @@ class GoldenReferenceGenerator:
             class_rows["median_distance"] = (
                 class_rows["valid_depth"].astype(float) - median_depth
             ).abs()
-            representative = (
-                class_rows.sort_values(["median_distance", "patient_id"], kind="mergesort")
-                .iloc[0]["patient_id"]
-            )
+            representative = class_rows.sort_values(
+                ["median_distance", "patient_id"], kind="mergesort"
+            ).iloc[0]["patient_id"]
             selected[str(representative)].append(f"representative_class_{class_name}")
 
         minimum_depth = validation["valid_depth"].min()
@@ -143,10 +142,7 @@ class GoldenReferenceGenerator:
         )
         selected[str(min_patient)].append("global_min_valid_depth")
         selected[str(max_patient)].append("global_max_valid_depth")
-        return {
-            patient_id: sorted(reasons)
-            for patient_id, reasons in sorted(selected.items())
-        }
+        return {patient_id: sorted(reasons) for patient_id, reasons in sorted(selected.items())}
 
     def validate_manifest_files(self, manifest_path: Path) -> None:
         """Validate manifest structure, contract checksum, tensor files, and tensor hashes."""

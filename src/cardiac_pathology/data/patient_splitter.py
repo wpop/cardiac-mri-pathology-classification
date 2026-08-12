@@ -91,9 +91,7 @@ class PatientSplitter:
         if set(outer_test_ids) != all_patient_set:
             raise ValueError("Outer test patient set differs from indexed patient set")
         duplicate_test_ids = [
-            patient_id
-            for patient_id, count in Counter(outer_test_ids).items()
-            if count != 1
+            patient_id for patient_id, count in Counter(outer_test_ids).items() if count != 1
         ]
         if duplicate_test_ids:
             raise ValueError(f"Patient appears in multiple outer test folds: {duplicate_test_ids}")

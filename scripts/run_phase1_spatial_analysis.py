@@ -3,7 +3,6 @@
 import sys
 from pathlib import Path
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPOSITORY_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
@@ -18,8 +17,7 @@ def main() -> None:
     """Run spatial candidate analysis and print final summaries."""
     analyzer = SpatialPolicyAnalyzer(
         dataset_dir=REPOSITORY_ROOT / "data/raw/acdc/training",
-        geometry_csv=REPOSITORY_ROOT
-        / "artifacts/dataset_inspection/patient_geometry.csv",
+        geometry_csv=REPOSITORY_ROOT / "artifacts/dataset_inspection/patient_geometry.csv",
         class_mapping_path=REPOSITORY_ROOT / "configs/class_mapping.json",
         output_dir=REPOSITORY_ROOT / "artifacts/dataset_inspection",
     )
