@@ -1,0 +1,476 @@
+{
+  "channel_semantics": {
+    "0": "ED",
+    "1": "ES"
+  },
+  "dataset": "ACDC",
+  "dtype": "float32",
+  "fixture_version": 1,
+  "model_array_order": "ZYX",
+  "patients": [
+    {
+      "class_index": 1,
+      "class_name": "DCM",
+      "ed_frame": 1,
+      "es_frame": 12,
+      "info_filename": "Info.cfg",
+      "info_sha256": "cc7b95a28e3a5428377e1b217f976ae7f863d9965e30a9a5d2391e513840a2f0",
+      "normalization": {
+        "clip_lower": 6.0,
+        "clip_upper": 348.74661499999957,
+        "mean": 113.33749666455218,
+        "scope": "joint_ed_es",
+        "std": 82.87164942021849
+      },
+      "patient_id": "patient001",
+      "resampled_shape_xyz": [
+        225,
+        267,
+        13
+      ],
+      "selection_reasons": [
+        "representative_class_DCM"
+      ],
+      "source_ed_filename": "patient001_frame01.nii.gz",
+      "source_ed_sha256": "725bdab01314e1e255157aae9d0be8218b7a76736c343485725b60a4d6f324ad",
+      "source_ed_shape_xyz": [
+        216,
+        256,
+        10
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "source_es_filename": "patient001_frame12.nii.gz",
+      "source_es_sha256": "869769939e47d8ff18e94901b727ab132baaa3015848e3184bd9b9c2d9f4b718",
+      "source_es_shape_xyz": [
+        216,
+        256,
+        10
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient001.npy",
+      "tensor_sha256": "bec1d0eb03e36b064ba307d4dbd4eebdf0feff1b09f074353fae03fc226cd2ec",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 13,
+      "z_padding_lower": 0,
+      "z_padding_upper": 1
+    },
+    {
+      "class_index": 1,
+      "class_name": "DCM",
+      "ed_frame": 1,
+      "es_frame": 16,
+      "info_filename": "Info.cfg",
+      "info_sha256": "89784a77b0db0eed0cee5f8ee77e5a2916c6096a5627ccd5321464cab7655165",
+      "normalization": {
+        "clip_lower": 3.1347221666666654,
+        "clip_upper": 828.6685279999995,
+        "mean": 172.7667977566153,
+        "scope": "joint_ed_es",
+        "std": 171.0024624479165
+      },
+      "patient_id": "patient006",
+      "resampled_shape_xyz": [
+        272,
+        300,
+        14
+      ],
+      "selection_reasons": [
+        "global_max_valid_depth"
+      ],
+      "source_ed_filename": "patient006_frame01.nii.gz",
+      "source_ed_sha256": "891f301c515817e1b630b4872f80babe8abe1e42735d590861db5dc08dd9404d",
+      "source_ed_shape_xyz": [
+        232,
+        256,
+        11
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.7578125,
+        1.7578125,
+        10.0
+      ],
+      "source_es_filename": "patient006_frame16.nii.gz",
+      "source_es_sha256": "992bce756778ba29d5b2cbc935152240fdd3a28f2679a88019500d9ae324807f",
+      "source_es_shape_xyz": [
+        232,
+        256,
+        11
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.7578125,
+        1.7578125,
+        10.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient006.npy",
+      "tensor_sha256": "1bdf58d38ea454a753790aee68bf6d7dd15aafa3a3bc7b14ebc285d6e50f344b",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 14,
+      "z_padding_lower": 0,
+      "z_padding_upper": 0
+    },
+    {
+      "class_index": 2,
+      "class_name": "HCM",
+      "ed_frame": 1,
+      "es_frame": 13,
+      "info_filename": "Info.cfg",
+      "info_sha256": "91bc4a700fc93a2fe758ddd17a3a5b81461e54cf678fb0ecd1e0c985aefcd82f",
+      "normalization": {
+        "clip_lower": 4.326959336127641,
+        "clip_upper": 324.82978643861543,
+        "mean": 110.83189983216882,
+        "scope": "joint_ed_es",
+        "std": 77.19994619337237
+      },
+      "patient_id": "patient021",
+      "resampled_shape_xyz": [
+        269,
+        287,
+        13
+      ],
+      "selection_reasons": [
+        "representative_class_HCM"
+      ],
+      "source_ed_filename": "patient021_frame01.nii.gz",
+      "source_ed_sha256": "ddbdf00fcaa83cddffca69b0903cf3957ccce1dd6126ef6e3adabc05d3499012",
+      "source_ed_shape_xyz": [
+        240,
+        256,
+        10
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.6796875,
+        1.6796875,
+        10.0
+      ],
+      "source_es_filename": "patient021_frame13.nii.gz",
+      "source_es_sha256": "0066e177611b59a1fda60fa53cd9a455d824d1188657711b42bcfa6557453dc5",
+      "source_es_shape_xyz": [
+        240,
+        256,
+        10
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.6796875,
+        1.6796875,
+        10.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient021.npy",
+      "tensor_sha256": "37cb2b42560b19d2afbe4dd8de26ca1414e65e90b03eb7531ea0a0cce1f93cfc",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 13,
+      "z_padding_lower": 0,
+      "z_padding_upper": 1
+    },
+    {
+      "class_index": 3,
+      "class_name": "MINF",
+      "ed_frame": 1,
+      "es_frame": 16,
+      "info_filename": "Info.cfg",
+      "info_sha256": "4d71f00d0116c7f2d274db556fce0262c42e0b1c9b0bacc9f98c87c89ae37c34",
+      "normalization": {
+        "clip_lower": 19.6070079166666,
+        "clip_upper": 378.1064501666667,
+        "mean": 143.9900986615411,
+        "scope": "joint_ed_es",
+        "std": 87.54134553457301
+      },
+      "patient_id": "patient042",
+      "resampled_shape_xyz": [
+        272,
+        300,
+        12
+      ],
+      "selection_reasons": [
+        "representative_class_MINF"
+      ],
+      "source_ed_filename": "patient042_frame01.nii.gz",
+      "source_ed_sha256": "5ed0a168c79cb15cc597691d017a36759ab46590dc7b4c62c760754465562369",
+      "source_ed_shape_xyz": [
+        232,
+        256,
+        9
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.7578125,
+        1.7578125,
+        10.0
+      ],
+      "source_es_filename": "patient042_frame16.nii.gz",
+      "source_es_sha256": "2c8bf3c4d56f923ddd2413a56509bcbc56abf8d13eb6acec3d18c3d04b5c8629",
+      "source_es_shape_xyz": [
+        232,
+        256,
+        9
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.7578125,
+        1.7578125,
+        10.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient042.npy",
+      "tensor_sha256": "3dfc2df8ec5ce0b7138591cd77eb9298c9c76dd9711abe2ace5476ae5ac788d9",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 12,
+      "z_padding_lower": 1,
+      "z_padding_upper": 1
+    },
+    {
+      "class_index": 0,
+      "class_name": "NOR",
+      "ed_frame": 1,
+      "es_frame": 16,
+      "info_filename": "Info.cfg",
+      "info_sha256": "f76031395b3d98b30c6172c12888c67b13f9e0485956151c8fa12871ff5d596c",
+      "normalization": {
+        "clip_lower": 3.1210363724489607,
+        "clip_upper": 1079.1541319132598,
+        "mean": 253.82961053747863,
+        "scope": "joint_ed_es",
+        "std": 236.21152823525165
+      },
+      "patient_id": "patient063",
+      "resampled_shape_xyz": [
+        233,
+        161,
+        10
+      ],
+      "selection_reasons": [
+        "representative_class_NOR"
+      ],
+      "source_ed_filename": "patient063_frame01.nii.gz",
+      "source_ed_sha256": "384e313eefeb2d97fda3f7b81ac345aa64a829ced60ee28f3b8527d21550177c",
+      "source_ed_shape_xyz": [
+        256,
+        176,
+        8
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "source_es_filename": "patient063_frame16.nii.gz",
+      "source_es_sha256": "1eef2a16ab004e944d6bc14e536f57be2f6520b08019f294b555bf196d9b782e",
+      "source_es_shape_xyz": [
+        256,
+        176,
+        8
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient063.npy",
+      "tensor_sha256": "6cc31371d90728a8d9cf0d455aee93b346ec48353a972ee5a3140c46f7f5df09",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 10,
+      "z_padding_lower": 2,
+      "z_padding_upper": 2
+    },
+    {
+      "class_index": 4,
+      "class_name": "RV",
+      "ed_frame": 1,
+      "es_frame": 9,
+      "info_filename": "Info.cfg",
+      "info_sha256": "ff38a4dcb6282d1eeb1f161d0e8de28eee0b6b8864fa616c51b4700bf17badd4",
+      "normalization": {
+        "clip_lower": 16.27595223588456,
+        "clip_upper": 174.30047465222265,
+        "mean": 51.51962109366466,
+        "scope": "joint_ed_es",
+        "std": 38.8208074962386
+      },
+      "patient_id": "patient085",
+      "resampled_shape_xyz": [
+        149,
+        234,
+        10
+      ],
+      "selection_reasons": [
+        "representative_class_RV"
+      ],
+      "source_ed_filename": "patient085_frame01.nii.gz",
+      "source_ed_sha256": "8ecada0ebc43252d962a5b50e21a78e05005d946629e4730ec90fe0e2bd2d4b0",
+      "source_ed_shape_xyz": [
+        184,
+        288,
+        15
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.2152800559997559,
+        1.2152800559997559,
+        5.0
+      ],
+      "source_es_filename": "patient085_frame09.nii.gz",
+      "source_es_sha256": "0ef2fd1c4dbdfc2ac33360dd07057afb1fd386150bf2268e3042ecdd79a72544",
+      "source_es_shape_xyz": [
+        184,
+        288,
+        15
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.2152800559997559,
+        1.2152800559997559,
+        5.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient085.npy",
+      "tensor_sha256": "163736d541d6e82c7203b5cfabacd31df96d647d00c43726083cd4a32839abca",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 10,
+      "z_padding_lower": 2,
+      "z_padding_upper": 2
+    },
+    {
+      "class_index": 4,
+      "class_name": "RV",
+      "ed_frame": 1,
+      "es_frame": 7,
+      "info_filename": "Info.cfg",
+      "info_sha256": "07731f271ee3bbdf1e9fb69e880866d8b6a161764462989ea243aa75d06aa557",
+      "normalization": {
+        "clip_lower": 18.0,
+        "clip_upper": 191.78680524454674,
+        "mean": 53.95476791577461,
+        "scope": "joint_ed_es",
+        "std": 39.17716160175235
+      },
+      "patient_id": "patient094",
+      "resampled_shape_xyz": [
+        233,
+        195,
+        7
+      ],
+      "selection_reasons": [
+        "global_min_valid_depth"
+      ],
+      "source_ed_filename": "patient094_frame01.nii.gz",
+      "source_ed_sha256": "00a0ecda08b02b52a954df06bad3918df68977f4f74d505107420ef6d40ac6d4",
+      "source_ed_shape_xyz": [
+        208,
+        174,
+        10
+      ],
+      "source_ed_spacing_xyz_mm": [
+        1.6826900243759155,
+        1.6826900243759155,
+        5.0
+      ],
+      "source_es_filename": "patient094_frame07.nii.gz",
+      "source_es_sha256": "941ee74d225488b916fd9b5d9b2d1f6742ed31c670a6eb50c9686af702dec8fd",
+      "source_es_shape_xyz": [
+        208,
+        174,
+        10
+      ],
+      "source_es_spacing_xyz_mm": [
+        1.6826900243759155,
+        1.6826900243759155,
+        5.0
+      ],
+      "target_spacing_xyz_mm": [
+        1.5,
+        1.5,
+        7.5
+      ],
+      "tensor_dtype": "float32",
+      "tensor_filename": "patient094.npy",
+      "tensor_sha256": "25fed4110145da4fe805656e261a58bc439b26e1738e16edb533a4f816954d34",
+      "tensor_shape": [
+        2,
+        14,
+        144,
+        144
+      ],
+      "valid_depth": 7,
+      "z_padding_lower": 3,
+      "z_padding_upper": 4
+    }
+  ],
+  "preprocessing_contract": "docs/preprocessing_contract.md",
+  "preprocessing_contract_sha256": "2ea430037849078aaa76f8822d56cdca2e5fb7be5a06a17f742926e1183b310d",
+  "source_array_order": "XYZ",
+  "tensor_shape": [
+    2,
+    14,
+    144,
+    144
+  ]
+}

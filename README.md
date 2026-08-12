@@ -1557,7 +1557,8 @@ Phase 0 — COMPLETE
 Phase 1 — COMPLETE
 Phase 2 — COMPLETE
 Phase 3 — COMPLETE
-Phase 4 — NEXT
+Phase 4 — COMPLETE
+Phase 5 — NEXT
 ```
 
 Completed so far:
@@ -1573,7 +1574,8 @@ Completed so far:
 * preprocessing contract frozen;
 * data-driven ResNet3D18 spatial geometry frozen;
 * deterministic patient-level 5-fold split artifact generated and validated;
-* deterministic production preprocessing implemented and validated on all 100 real ACDC patients.
+* deterministic production preprocessing implemented and validated on all 100 real ACDC patients;
+* golden preprocessing references generated and validated under `tests/fixtures/golden/`.
 
 Frozen preprocessing summary:
 
@@ -1596,4 +1598,4 @@ No neural network has been implemented yet.
 
 No training has been performed.
 
-The next phase is **Phase 4 — Golden Preprocessing References**.
+The next phase is **Phase 5 — Custom 3D ResNet-18**.

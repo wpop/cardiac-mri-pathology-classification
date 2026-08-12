@@ -126,9 +126,9 @@ artifacts/preprocessing_validation/phase3_validation.csv
 
 ---
 
-## Phase 4 — Golden Preprocessing References — NEXT
+## Phase 4 — Golden Preprocessing References — COMPLETE
 
-Create deterministic preprocessing references from selected real ACDC patients.
+Phase 4 produced deterministic preprocessing references from selected real ACDC patients.
 
 Store them under:
 
@@ -136,11 +136,13 @@ Store them under:
 tests/fixtures/golden/
 ```
 
-These references will be used for preprocessing regression testing and later Python ↔ C++ reproducibility work.
+These references include byte-stable tensors, source checksums, preprocessing metadata, and
+an automated validator for preprocessing regression testing and later Python ↔ C++
+reproducibility work.
 
 ---
 
-## Phase 5 — Custom 3D ResNet-18
+## Phase 5 — Custom 3D ResNet-18 — NEXT
 
 Implement:
 
@@ -319,10 +321,10 @@ The completed project should include:
 Current phase:
 
 ```text
-Phase 0 — Project Bootstrap
+Phase 4 — Golden Preprocessing References — COMPLETE
 ```
 
-No preprocessing constants have been frozen.
+Preprocessing constants are frozen.
 
 No neural network has been implemented.
 
@@ -331,5 +333,5 @@ No training has been performed.
 The next major phase is:
 
 ```text
-Phase 1 — Real ACDC Dataset Inspection
+Phase 5 — Custom 3D ResNet-18
 ```
