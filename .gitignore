@@ -44,6 +44,10 @@ data/*
 # Generated artifacts
 artifacts/*
 !artifacts/.gitkeep
+!artifacts/dataset_splits/
+artifacts/dataset_splits/*
+!artifacts/dataset_splits/acdc_5fold_seed42.json
+!artifacts/dataset_splits/acdc_5fold_inner_validation_seed42.json
 
 # Logs
 *.log

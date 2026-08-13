@@ -12,6 +12,7 @@ from cardiac_pathology.training.initialization import (
     initialize_model,
     set_deterministic_seed,
 )
+from cardiac_pathology.training.phase7_split_manifest_builder import Phase7SplitManifestBuilder
 from cardiac_pathology.training.splits import (
     InnerValidationSplit,
     create_inner_validation_split,
@@ -34,6 +35,7 @@ __all__ = [
     "InitializationStrategy",
     "InnerValidationSplit",
     "ParameterCompatibility",
+    "Phase7SplitManifestBuilder",
     "PreprocessedPatientDataset",
     "Trainer",
     "TrainerConfig",
