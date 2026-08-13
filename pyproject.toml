@@ -29,6 +29,10 @@ dev = [
     "pandas-stubs",
 ]
 
+pretrained = [
+    "torchvision",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

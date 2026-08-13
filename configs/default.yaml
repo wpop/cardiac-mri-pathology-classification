@@ -61,6 +61,28 @@ model:
 
 training:
   num_folds: 5
+  pilot_fold_index: 0
+  validation_fraction: 0.25
+  initialization_strategy: pretrained
+  batch_size: 2
+  num_epochs: 50
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-4
+  optimizer: adamw
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.0
+  num_workers: 0
+  checkpoint_dir: artifacts/checkpoints/phase6
+  device: cpu
+
+  augmentation:
+    enabled: true
+    rotation_degrees: 5.0
+    translation_mm: 5.0
+    intensity_scale_min: 0.95
+    intensity_scale_max: 1.05
+    gaussian_noise_std: 0.01
+    transform_probability: 0.5
 
 deployment:
   input_name: cine_mri

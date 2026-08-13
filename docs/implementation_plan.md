@@ -142,7 +142,7 @@ reproducibility work.
 
 ---
 
-## Phase 5 — Custom 3D ResNet-18 — NEXT
+## Phase 5 — Custom 3D ResNet-18 — COMPLETE
 
 Implement:
 
@@ -182,7 +182,7 @@ The architecture must account for cardiac MRI anisotropy.
 
 ---
 
-## Phase 6 — Training Infrastructure and Initialization Pilot
+## Phase 6 — Training Infrastructure and Initialization Pilot — IN PROGRESS
 
 Implement training infrastructure.
 
@@ -194,6 +194,13 @@ Compare:
 Run the comparison first on one representative fold.
 
 Use the selected initialization strategy for the full experiment.
+
+Phase 6A has added reusable infrastructure for deterministic seeding, inner
+validation splitting, early stopping, validation Macro F1 checkpoint selection,
+training and validation loops, checkpoint metadata, and initialization
+compatibility reporting.
+
+The random-versus-pretrained pilot has not been run.
 
 ---
 
