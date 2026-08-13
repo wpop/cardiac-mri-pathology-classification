@@ -97,6 +97,7 @@ def main() -> None:
     )
     initialization_strategy = require_initialization_strategy(training_config)
     initialization_report = initialize_model(model, initialization_strategy)
+    reset_training_rng_after_initialization(seed)
 
     experiment_dir = experiment_dir_for_run(
         checkpoint_root=Path(require_str(training_config, "checkpoint_dir")),
@@ -350,6 +351,23 @@ def experiment_dir_for_run(
         Directory dedicated to one fold and initialization strategy.
     """
     return checkpoint_root / f"fold_{fold_index}" / initialization_strategy
+
+
+def reset_training_rng_after_initialization(seed: int) -> None:
+    """Reset stochastic training RNG streams after model initialization.
+
+    Strategy-specific initialization may consume different PyTorch RNG internally
+    before training begins. Re-seeding here preserves already-initialized model
+    parameters while making subsequent stochastic training operations comparable
+    across initialization strategies.
+
+    Args:
+        seed: Experiment seed used for stochastic training operations.
+
+    Returns:
+        None.
+    """
+    set_deterministic_seed(seed)
 
 
 def build_run_summary_payload(
