@@ -72,8 +72,8 @@ training:
   early_stopping_patience: 10
   early_stopping_min_delta: 0.0
   num_workers: 0
-  checkpoint_dir: artifacts/checkpoints/phase6
-  device: cpu
+  checkpoint_dir: artifacts/checkpoints/phase7
+  device: cuda
 
   augmentation:
     enabled: true

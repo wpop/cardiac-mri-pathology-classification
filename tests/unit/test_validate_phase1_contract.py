@@ -25,6 +25,14 @@ def test_phase1_contract_stage_strides_match_actual_resnet3d18() -> None:
     assert config["model"]["stage_strides"] == actual_stage_strides(model)
 
 
+def test_phase7_training_runtime_config_uses_cuda_checkpoint_contract() -> None:
+    """Default training runtime follows the Phase 7 CUDA execution contract."""
+    config = yaml.safe_load((REPOSITORY_ROOT / "configs/default.yaml").read_text(encoding="utf-8"))
+
+    assert config["training"]["checkpoint_dir"] == "artifacts/checkpoints/phase7"
+    assert config["training"]["device"] == "cuda"
+
+
 def test_phase1_contract_feature_shapes_include_maxpool_geometry() -> None:
     """Validator feature-map shapes are derived from the real module stack."""
     model = ResNet3D18()
