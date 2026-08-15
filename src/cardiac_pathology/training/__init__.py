@@ -20,6 +20,12 @@ from cardiac_pathology.training.phase7_cross_validation import (
     Phase7FoldSplit,
     Phase7PredictionRecord,
 )
+from cardiac_pathology.training.phase7_metrics import (
+    Phase7AurocMetrics,
+    Phase7ClassMetrics,
+    Phase7FoldMetric,
+    Phase7MetricsBuilder,
+)
 from cardiac_pathology.training.phase7_oof_pooling import (
     Phase7OofPredictionPooler,
     Phase7OofRecord,
@@ -53,6 +59,10 @@ __all__ = [
     "Phase7FoldResult",
     "Phase7FoldRunner",
     "Phase7FoldSplit",
+    "Phase7AurocMetrics",
+    "Phase7ClassMetrics",
+    "Phase7FoldMetric",
+    "Phase7MetricsBuilder",
     "Phase7OofPredictionPooler",
     "Phase7OofRecord",
     "Phase7PredictionRecord",
