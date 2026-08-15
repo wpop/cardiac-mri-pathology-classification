@@ -31,6 +31,11 @@ from cardiac_pathology.training.phase7_oof_pooling import (
     Phase7OofRecord,
 )
 from cardiac_pathology.training.phase7_split_manifest_builder import Phase7SplitManifestBuilder
+from cardiac_pathology.training.phase7_visualization import (
+    Phase7EpochHistory,
+    Phase7FoldVisualizationData,
+    Phase7VisualizationBuilder,
+)
 from cardiac_pathology.training.splits import (
     InnerValidationSplit,
     create_inner_validation_split,
@@ -65,6 +70,9 @@ __all__ = [
     "Phase7MetricsBuilder",
     "Phase7OofPredictionPooler",
     "Phase7OofRecord",
+    "Phase7EpochHistory",
+    "Phase7FoldVisualizationData",
+    "Phase7VisualizationBuilder",
     "Phase7PredictionRecord",
     "PreprocessedPatientDataset",
     "Trainer",
