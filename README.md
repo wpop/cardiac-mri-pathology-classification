@@ -344,7 +344,7 @@ The primary architecture is a custom:
 3D ResNet-18
 ```
 
-The implementation must include at minimum:
+The implementation includes:
 
 ```text
 BasicBlock3D
@@ -358,14 +358,14 @@ src/cardiac_pathology/models/basic_block_3d.py
 src/cardiac_pathology/models/resnet3d18.py
 ```
 
-The final neural-network implementation will not simply import a complete ResNet from:
+The neural-network implementation does not simply import a complete ResNet from:
 
 * torchvision;
 * MONAI;
 * a third-party repository;
 * a model zoo.
 
-Established architectures may be studied and compatible pretrained weights may be experimentally reused, but the final residual blocks and network class are implemented in this repository.
+Established architectures may be studied and compatible pretrained weights may be reused, but the residual blocks and network class are implemented in this repository.
 
 ---
 
@@ -867,15 +867,48 @@ Each patient must appear exactly once in the pooled out-of-fold evaluation.
 
 ## Evaluation Metrics
 
-The project will report:
+The completed Phase 7 cross-validation reports:
 
-* mean ± standard deviation Accuracy;
-* mean ± standard deviation Macro F1;
+* mean ± sample standard deviation Accuracy;
+* mean ± sample standard deviation Macro F1;
 * per-class Precision;
 * per-class Recall;
 * per-class F1;
 * pooled out-of-fold confusion matrix;
-* pooled multiclass one-vs-rest AUROC when statistically meaningful.
+* pooled multiclass one-vs-rest AUROC.
+
+Phase 7 used the real official ACDC dataset with 100 labeled patients and leakage-safe stratified patient-level 5-fold cross-validation. The pooled out-of-fold evaluation contains 100 unique patients, each exactly once.
+
+Phase 7 final results:
+
+```text
+Fold Accuracy: [0.65, 0.50, 0.55, 0.65, 0.50]
+Fold Macro F1: [0.6393650793650794, 0.4704761904761905, 0.5556410256410256, 0.6442857142857144, 0.4833333333333333]
+Accuracy mean ± sample std: 0.5700 ± 0.0758
+Macro F1 mean ± sample std: 0.5586 ± 0.0826
+Pooled Macro OvR AUROC: 0.83375
+Best epochs: [27, 38, 11, 25, 12]
+```
+
+Pooled per-class Precision / Recall / F1:
+
+```text
+NOR:  0.3793 / 0.5500 / 0.4490
+DCM:  0.9375 / 0.7500 / 0.8333
+HCM:  0.8000 / 0.6000 / 0.6857
+MINF: 0.4000 / 0.4000 / 0.4000
+RV:   0.5500 / 0.5500 / 0.5500
+```
+
+Per-class OvR AUROC:
+
+```text
+NOR:  0.8100
+DCM:  0.9200
+HCM:  0.86625
+MINF: 0.683125
+RV:   0.889375
+```
 
 Because ACDC is small, evaluation methodology is considered as important as the network architecture.
 
@@ -907,14 +940,14 @@ They are **not** the final deployment model.
 
 During cross-validation, the best epoch for every fold is recorded.
 
-Example:
+Phase 7 best epochs:
 
 ```text
-Fold 1 → 62
-Fold 2 → 70
-Fold 3 → 68
-Fold 4 → 75
-Fold 5 → 66
+Fold 0 → 27
+Fold 1 → 38
+Fold 2 → 11
+Fold 3 → 25
+Fold 4 → 12
 ```
 
 A deterministic final training duration can then be derived, for example:
@@ -983,14 +1016,19 @@ Mathematically adapt compatible three-channel RGB weights to two input channels.
 
 If B2 is used, the exact transformation must be documented.
 
-The initialization comparison is first performed as a pilot on one representative fold.
+The corrected Phase 6 initialization pilot has been completed on one representative fold:
 
-The winning strategy is then used for:
+```text
+random:     best validation Macro F1 = 0.4222222222222222, best epoch = 8
+pretrained: best validation Macro F1 = 0.7677777777777778, best epoch = 44
+```
+
+The selected initialization strategy is compatible pretrained Kinetics weights. It is used for:
 
 * full 5-fold cross-validation;
 * final production training.
 
-Pretrained weights are not assumed to outperform random initialization.
+Pretrained weights were not assumed to outperform random initialization; the choice was made from the corrected controlled pilot.
 
 Layers are not frozen by default because RGB video and cardiac MRI belong to substantially different domains.
 
@@ -1409,7 +1447,7 @@ Qt and C++ belong to the future workstation project, not this repository.
 
 ## Implementation Roadmap
 
-### Phase 0 — Project Bootstrap
+### Phase 0 — Project Bootstrap — COMPLETE
 
 Create:
 
@@ -1420,11 +1458,11 @@ Create:
 * development tooling;
 * CI foundation.
 
-### Phase 1 — Real ACDC Dataset Inspection
+### Phase 1 — Real ACDC Dataset Inspection — COMPLETE
 
 Inspect real ACDC data and answer all geometry, orientation, background, crop, padding, and resampling questions before freezing preprocessing constants.
 
-### Phase 2 — Dataset Indexing and Patient-Level Splits
+### Phase 2 — Dataset Indexing and Patient-Level Splits — COMPLETE
 
 Implement:
 
@@ -1435,7 +1473,7 @@ Implement:
 * stratified patient-level cross-validation;
 * leakage tests.
 
-### Phase 3 — Deterministic Preprocessing
+### Phase 3 — Deterministic Preprocessing — COMPLETE
 
 Implement:
 
@@ -1448,41 +1486,48 @@ Implement:
 * explicit axis conversion;
 * final tensor construction.
 
-### Phase 4 — Golden Preprocessing Fixtures
+### Phase 4 — Golden Preprocessing Fixtures — COMPLETE
 
 Create deterministic preprocessing references from selected real ACDC patients.
 
-### Phase 5 — Custom 3D ResNet-18
+### Phase 5 — Custom 3D ResNet-18 — COMPLETE
 
-Implement:
+Implemented:
 
 * `BasicBlock3D`;
 * `ResNet3D18`;
 * anisotropy-aware downsampling;
 * model tests.
 
-### Phase 6 — Initialization Pilot and Training Infrastructure
+### Phase 6 — Initialization Pilot and Training Infrastructure — COMPLETE
 
-Implement training infrastructure and compare:
+Implemented training infrastructure and completed the corrected initialization pilot comparing:
 
 * random initialization;
 * compatible pretrained initialization.
 
-### Phase 7 — Full Five-Fold Cross-Validation
+Selected initialization: compatible pretrained Kinetics weights.
 
-Run complete leakage-safe patient-level cross-validation.
+### Phase 7 — Full Five-Fold Cross-Validation — COMPLETE
 
-Produce:
+Completed leakage-safe stratified patient-level 5-fold cross-validation.
 
+Produced:
+
+* per-fold best checkpoints;
 * out-of-fold predictions;
-* fold metrics;
-* pooled metrics;
-* confusion matrix;
-* ROC analysis where meaningful;
-* training histories;
-* error analysis.
+* per-fold summaries;
+* pooled out-of-fold predictions;
+* final metrics;
+* loss history figure;
+* Macro F1 history figure;
+* pooled confusion matrix figure;
+* pooled OvR ROC figure;
+* per-class metrics figure.
 
-### Phase 8 — 3D Grad-CAM
+Cross-validation metrics remain the generalization metrics.
+
+### Phase 8 — 3D Grad-CAM — NEXT
 
 Implement compact model explainability for selected correctly and incorrectly classified real patients.
 
@@ -1558,7 +1603,10 @@ Phase 1 — COMPLETE
 Phase 2 — COMPLETE
 Phase 3 — COMPLETE
 Phase 4 — COMPLETE
-Phase 5 — NEXT
+Phase 5 — COMPLETE
+Phase 6 — COMPLETE
+Phase 7 — COMPLETE
+Phase 8 — NEXT
 ```
 
 Completed so far:
@@ -1575,7 +1623,11 @@ Completed so far:
 * data-driven ResNet3D18 spatial geometry frozen;
 * deterministic patient-level 5-fold split artifact generated and validated;
 * deterministic production preprocessing implemented and validated on all 100 real ACDC patients;
-* golden preprocessing references generated and validated under `tests/fixtures/golden/`.
+* golden preprocessing references generated and validated under `tests/fixtures/golden/`;
+* custom `BasicBlock3D` and `ResNet3D18` implemented;
+* corrected Phase 6 initialization pilot completed;
+* Phase 7 leakage-safe stratified patient-level 5-fold cross-validation completed;
+* Phase 7 pooled OOF predictions, final metrics, and figures generated.
 
 Frozen preprocessing summary:
 
@@ -1594,8 +1646,12 @@ Frozen model input geometry:
 [N, 2, 14, 144, 144] -> raw logits [N, 5]
 ```
 
-No neural network has been implemented yet.
+Selected initialization:
 
-No training has been performed.
+```text
+compatible pretrained Kinetics weights
+```
 
-The next phase is **Phase 5 — Custom 3D ResNet-18**.
+Phase 7 CUDA execution requested deterministic algorithms with `warn_only=True`, but is not claimed to be bitwise deterministic.
+
+The next phase is **Phase 8 — 3D Grad-CAM**.

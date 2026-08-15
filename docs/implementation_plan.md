@@ -10,7 +10,7 @@ This project does not reuse segmentation masks, segmentation outputs, existing U
 
 ---
 
-## Phase 0 — Project Bootstrap
+## Phase 0 — Project Bootstrap — COMPLETE
 
 Create the initial professional repository structure.
 
@@ -144,7 +144,7 @@ reproducibility work.
 
 ## Phase 5 — Custom 3D ResNet-18 — COMPLETE
 
-Implement:
+Implemented:
 
 * `BasicBlock3D`;
 * `ResNet3D18`.
@@ -182,52 +182,100 @@ The architecture must account for cardiac MRI anisotropy.
 
 ---
 
-## Phase 6 — Training Infrastructure and Initialization Pilot — IN PROGRESS
+## Phase 6 — Training Infrastructure and Initialization Pilot — COMPLETE
 
-Implement training infrastructure.
+Phase 6 implemented training infrastructure and completed the corrected initialization pilot.
 
-Compare:
+The corrected pilot compared:
 
 * random initialization;
 * compatible pretrained initialization where technically appropriate.
 
-Run the comparison first on one representative fold.
+Results:
 
-Use the selected initialization strategy for the full experiment.
+```text
+random:     best validation Macro F1 = 0.4222222222222222, best epoch = 8
+pretrained: best validation Macro F1 = 0.7677777777777778, best epoch = 44
+```
+
+Selected initialization: compatible pretrained Kinetics weights.
 
 Phase 6A has added reusable infrastructure for deterministic seeding, inner
 validation splitting, early stopping, validation Macro F1 checkpoint selection,
 training and validation loops, checkpoint metadata, and initialization
 compatibility reporting.
 
-The random-versus-pretrained pilot has not been run.
-
 ---
 
-## Phase 7 — Five-Fold Cross-Validation
+## Phase 7 — Five-Fold Cross-Validation — COMPLETE
 
-Run stratified patient-level 5-fold cross-validation.
+Phase 7 completed leakage-safe stratified patient-level 5-fold cross-validation on the real official ACDC dataset with 100 labeled patients.
 
-Inside every outer training fold, use a separate validation subset for:
+Inside every outer training fold, a separate validation subset was used for:
 
 * early stopping;
 * checkpoint selection.
 
-Report:
+The pooled out-of-fold evaluation contains 100 unique patients, each exactly once.
 
-* Accuracy mean ± standard deviation;
-* Macro F1 mean ± standard deviation;
-* per-class Precision;
-* per-class Recall;
-* per-class F1;
-* pooled out-of-fold confusion matrix;
-* multiclass one-vs-rest AUROC where statistically meaningful.
+Fold Accuracy:
 
-Every patient must appear exactly once in the pooled out-of-fold evaluation.
+```text
+[0.65, 0.50, 0.55, 0.65, 0.50]
+```
+
+Fold Macro F1:
+
+```text
+[0.6393650793650794, 0.4704761904761905, 0.5556410256410256, 0.6442857142857144, 0.4833333333333333]
+```
+
+Summary:
+
+```text
+Accuracy mean ± sample std: 0.5700 ± 0.0758
+Macro F1 mean ± sample std: 0.5586 ± 0.0826
+Pooled Macro OvR AUROC: 0.83375
+Best epochs: [27, 38, 11, 25, 12]
+```
+
+Pooled per-class Precision / Recall / F1:
+
+```text
+NOR:  0.3793 / 0.5500 / 0.4490
+DCM:  0.9375 / 0.7500 / 0.8333
+HCM:  0.8000 / 0.6000 / 0.6857
+MINF: 0.4000 / 0.4000 / 0.4000
+RV:   0.5500 / 0.5500 / 0.5500
+```
+
+Per-class OvR AUROC:
+
+```text
+NOR:  0.8100
+DCM:  0.9200
+HCM:  0.86625
+MINF: 0.683125
+RV:   0.889375
+```
+
+Generated outputs include:
+
+* per-fold best checkpoints;
+* per-fold OOF predictions and summaries;
+* pooled OOF predictions;
+* final metrics;
+* loss history figure;
+* Macro F1 history figure;
+* pooled confusion matrix figure;
+* pooled OvR ROC figure;
+* per-class metrics figure.
+
+Cross-validation metrics remain the generalization metrics. Phase 7 CUDA execution must not be described as bitwise deterministic.
 
 ---
 
-## Phase 8 — 3D Grad-CAM
+## Phase 8 — 3D Grad-CAM — NEXT
 
 Implement compact 3D Grad-CAM visualization for representative real ACDC patients.
 
@@ -328,17 +376,35 @@ The completed project should include:
 Current phase:
 
 ```text
-Phase 4 — Golden Preprocessing References — COMPLETE
+Phase 8 — 3D Grad-CAM — NEXT
+```
+
+Phase status:
+
+```text
+Phase 0 — COMPLETE
+Phase 1 — COMPLETE
+Phase 2 — COMPLETE
+Phase 3 — COMPLETE
+Phase 4 — COMPLETE
+Phase 5 — COMPLETE
+Phase 6 — COMPLETE
+Phase 7 — COMPLETE
+Phase 8 — NEXT
 ```
 
 Preprocessing constants are frozen.
 
-No neural network has been implemented.
+Custom `BasicBlock3D` and `ResNet3D18` are implemented.
 
-No training has been performed.
+The corrected Phase 6 initialization pilot selected compatible pretrained Kinetics weights.
+
+Phase 7 leakage-safe stratified patient-level 5-fold cross-validation is complete.
+
+Cross-validation metrics remain the generalization metrics.
 
 The next major phase is:
 
 ```text
-Phase 5 — Custom 3D ResNet-18
+Phase 8 — 3D Grad-CAM
 ```
