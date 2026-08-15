@@ -12,6 +12,14 @@ from cardiac_pathology.training.initialization import (
     initialize_model,
     set_deterministic_seed,
 )
+from cardiac_pathology.training.phase7_cross_validation import (
+    Phase7CrossValidationOrchestrator,
+    Phase7FoldArtifacts,
+    Phase7FoldResult,
+    Phase7FoldRunner,
+    Phase7FoldSplit,
+    Phase7PredictionRecord,
+)
 from cardiac_pathology.training.phase7_split_manifest_builder import Phase7SplitManifestBuilder
 from cardiac_pathology.training.splits import (
     InnerValidationSplit,
@@ -36,6 +44,12 @@ __all__ = [
     "InnerValidationSplit",
     "ParameterCompatibility",
     "Phase7SplitManifestBuilder",
+    "Phase7CrossValidationOrchestrator",
+    "Phase7FoldArtifacts",
+    "Phase7FoldResult",
+    "Phase7FoldRunner",
+    "Phase7FoldSplit",
+    "Phase7PredictionRecord",
     "PreprocessedPatientDataset",
     "Trainer",
     "TrainerConfig",
