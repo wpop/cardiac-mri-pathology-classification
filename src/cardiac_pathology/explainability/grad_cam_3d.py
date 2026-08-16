@@ -259,21 +259,25 @@ class GradCam3D:
 
     @staticmethod
     def _compute_cam(
-        activation: Tensor, gradient: Tensor, output_size: tuple[int, int, int]
+        activation: Tensor,
+        gradient: Tensor,
+        output_size: tuple[int, int, int],
     ) -> Tensor:
         activation = activation.detach()
         gradient = gradient.detach()
+
         weights = gradient.mean(dim=(2, 3, 4), keepdim=True)
         cam = (weights * activation).sum(dim=1)
         cam = F.relu(cam)
         cam = GradCam3D._normalize_per_item(cam)
-        cam = F.interpolate(
+
+        interpolated: Tensor = F.interpolate(
             cam.unsqueeze(1),
             size=output_size,
             mode="trilinear",
             align_corners=False,
-        ).squeeze(1)
-        return cast(Tensor, cam)
+        )
+        return interpolated.squeeze(1)
 
     @staticmethod
     def _normalize_per_item(cam: Tensor) -> Tensor:
