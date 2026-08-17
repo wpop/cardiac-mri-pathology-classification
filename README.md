@@ -1067,7 +1067,7 @@ Required visualizations include:
 
 ## 3D Grad-CAM
 
-The project will include compact 3D Grad-CAM visualization for representative real ACDC patients.
+Compact 3D Grad-CAM visualization has been implemented and validated on representative real ACDC patients.
 
 Example presentation:
 
@@ -1527,19 +1527,52 @@ Produced:
 
 Cross-validation metrics remain the generalization metrics.
 
-### Phase 8 — 3D Grad-CAM — NEXT
+### Phase 8 — 3D Grad-CAM — COMPLETE
 
-Implement compact model explainability for selected correctly and incorrectly classified real patients.
+Implemented compact model explainability for representative correctly and incorrectly classified real ACDC patients.
 
-### Phase 9 — Final Production Model
+### Phase 9 — Final Production Model — COMPLETE
 
-Train one final model using all labeled ACDC patients.
+Completed final production training using all 100 labeled ACDC patients.
 
-Produce:
+The production cohort contained 100 unique patients with the following class distribution:
 
 ```text
-classifier.pt
+NOR  = 20
+DCM  = 20
+HCM  = 20
+MINF = 20
+RV   = 20
 ```
+
+The fixed duration was derived from the Phase 7 best epochs:
+
+```text
+final_epochs = median(27, 38, 11, 25, 12) = 25
+```
+
+The final model uses the custom `ResNet3D18` with compatible pretrained initialization.
+
+No Phase 9 validation subset, test subset, early stopping, or checkpoint selection was used.
+
+Produced:
+
+```text
+artifacts/checkpoints/phase9/classifier.pt
+artifacts/checkpoints/phase9/phase9_training_summary.json
+```
+
+Classifier reload validation passed on a real ACDC input:
+
+```text
+input shape  = [1, 2, 14, 144, 144]
+output shape = [1, 5]
+logits       = finite
+```
+
+The `classifier.pt` artifact contains no optimizer state.
+
+Phase 9 training diagnostics are engineering QA only. The Phase 7 pooled out-of-fold metrics remain the reported generalization results.
 
 ### Phase 10 — ONNX Deployment
 
@@ -1606,7 +1639,9 @@ Phase 4 — COMPLETE
 Phase 5 — COMPLETE
 Phase 6 — COMPLETE
 Phase 7 — COMPLETE
-Phase 8 — NEXT
+Phase 8 — COMPLETE
+Phase 9 — COMPLETE
+Phase 10 — NEXT
 ```
 
 Completed so far:
@@ -1628,6 +1663,9 @@ Completed so far:
 * corrected Phase 6 initialization pilot completed;
 * Phase 7 leakage-safe stratified patient-level 5-fold cross-validation completed;
 * Phase 7 pooled OOF predictions, final metrics, and figures generated.
+* Phase 8 compact 3D Grad-CAM implemented and validated on representative real ACDC patients;
+* Phase 9 final production model trained on all 100 labeled ACDC patients and saved as `artifacts/checkpoints/phase9/classifier.pt`;
+* Phase 9 classifier reload validation passed with finite `[1, 5]` logits for a real ACDC input.
 
 Frozen preprocessing summary:
 
@@ -1652,6 +1690,6 @@ Selected initialization:
 compatible pretrained Kinetics weights
 ```
 
-Phase 7 CUDA execution requested deterministic algorithms with `warn_only=True`, but is not claimed to be bitwise deterministic.
+CUDA execution requested deterministic algorithms with `warn_only=True`. During Phase 9 final production training, PyTorch emitted a non-deterministic implementation warning for `max_pool3d_with_indices_backward_cuda`, so CUDA training is not claimed to be bitwise deterministic.
 
-The next phase is **Phase 8 — 3D Grad-CAM**.
+The next phase is **Phase 10 — ONNX Deployment**.
