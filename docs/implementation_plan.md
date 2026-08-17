@@ -275,9 +275,9 @@ Cross-validation metrics remain the generalization metrics. Phase 7 CUDA executi
 
 ---
 
-## Phase 8 — 3D Grad-CAM — NEXT
+## Phase 8 — 3D Grad-CAM — COMPLETE
 
-Implement compact 3D Grad-CAM visualization for representative real ACDC patients.
+Phase 8 implemented and validated compact 3D Grad-CAM visualization for representative real ACDC patients.
 
 Show:
 
@@ -290,19 +290,51 @@ Show:
 
 ---
 
-## Phase 9 — Final Production Model
+## Phase 9 — Final Production Model — COMPLETE
 
-Use the best-epoch information from cross-validation to derive a deterministic final training duration.
-
-Then train one production model using **all labeled ACDC patients**.
-
-Produce:
+Phase 9 used the best-epoch information from cross-validation to derive a deterministic final training duration:
 
 ```text
-classifier.pt
+best_epochs = [27, 38, 11, 25, 12]
+final_epochs = median(best_epochs) = 25
 ```
 
-Cross-validation metrics remain the reported generalization metrics.
+One production model was trained using all 100 labeled ACDC patients:
+
+```text
+total_patient_entries = 100
+unique_patient_ids = 100
+NOR  = 20
+DCM  = 20
+HCM  = 20
+MINF = 20
+RV   = 20
+```
+
+The final model retained the custom `ResNet3D18` architecture and used compatible pretrained initialization.
+
+No Phase 9 validation subset, test subset, early stopping, or checkpoint selection was used.
+
+Produced:
+
+```text
+artifacts/checkpoints/phase9/classifier.pt
+artifacts/checkpoints/phase9/phase9_training_summary.json
+```
+
+The final classifier artifact reloaded successfully and passed real ACDC inference validation:
+
+```text
+input shape  = [1, 2, 14, 144, 144]
+output shape = [1, 5]
+logits       = finite
+```
+
+The `classifier.pt` artifact contains no optimizer state.
+
+Phase 9 training diagnostics are engineering QA only. Cross-validation metrics remain the reported generalization metrics.
+
+CUDA execution is not claimed to be bitwise deterministic because PyTorch warned that `max_pool3d_with_indices_backward_cuda` lacks a deterministic implementation under `warn_only=True`.
 
 ---
 
@@ -376,7 +408,7 @@ The completed project should include:
 Current phase:
 
 ```text
-Phase 8 — 3D Grad-CAM — NEXT
+Phase 10 — ONNX Deployment — NEXT
 ```
 
 Phase status:
@@ -390,7 +422,9 @@ Phase 4 — COMPLETE
 Phase 5 — COMPLETE
 Phase 6 — COMPLETE
 Phase 7 — COMPLETE
-Phase 8 — NEXT
+Phase 8 — COMPLETE
+Phase 9 — COMPLETE
+Phase 10 — NEXT
 ```
 
 Preprocessing constants are frozen.
@@ -403,8 +437,12 @@ Phase 7 leakage-safe stratified patient-level 5-fold cross-validation is complet
 
 Cross-validation metrics remain the generalization metrics.
 
+Phase 8 compact 3D Grad-CAM is complete and validated on representative real ACDC patients.
+
+Phase 9 final production training is complete using all 100 labeled ACDC patients.
+
 The next major phase is:
 
 ```text
-Phase 8 — 3D Grad-CAM
+Phase 10 — ONNX Deployment
 ```
