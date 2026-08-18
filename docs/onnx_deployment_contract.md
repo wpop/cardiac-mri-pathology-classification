@@ -2,54 +2,64 @@
 
 ## Status
 
-**Status: provisional — not frozen.**
+**Status: frozen/final after successful Phase 10 export and parity validation.**
 
-The overall ONNX deployment contract remains provisional and will be completed after:
-
-* final model training;
-* ONNX export;
-* PyTorch ↔ ONNX Runtime parity validation.
+This document defines the finalized ONNX deployment contract for the Phase 9
+cardiac MRI pathology classifier. It records only verified Phase 10 deployment
+facts and does not change or reinterpret the frozen preprocessing contract.
 
 ---
 
-## Deployment Model
+## Artifacts
 
-Final deployment artifact:
+Source checkpoint:
 
-`classifier.onnx`
+`artifacts/checkpoints/phase9/classifier.pt`
+
+Final ONNX artifact:
+
+`artifacts/deployment/classifier.onnx`
+
+Architecture:
+
+`ResNet3D18`
+
+Export API:
+
+`torch.onnx.export(..., dynamo=True)`
+
+ONNX opset:
+
+`18`
 
 The ONNX model represents only the neural-network classifier.
-
-Medical-image preprocessing remains outside the ONNX graph.
 
 ---
 
 ## Input Contract
 
-Planned input name:
+Input name:
 
 `cine_mri`
 
-Planned dtype:
+Input dtype:
 
 `float32`
 
-Planned tensor layout:
+Input tensor layout:
 
 `[N, 2, 14, 144, 144]`
+
+Only the batch dimension `N` is dynamic. Channel, depth, height, and width are
+fixed as `[2, 14, 144, 144]`.
 
 Channel semantics:
 
 * channel 0: ED;
 * channel 1: ES.
 
-The input geometry is frozen by Phase 1 and defined in:
-
-```text
-docs/preprocessing_contract.md
-```
-
-The input tensor must already satisfy the frozen preprocessing contract before inference.
+The input tensor must already satisfy the frozen preprocessing contract before
+inference.
 
 ---
 
@@ -67,9 +77,8 @@ Output shape:
 
 `[N, 5]`
 
-The output contains **raw logits**.
-
-Softmax must remain outside the neural network and outside the ONNX graph.
+The output contains raw, unnormalized class logits. Softmax remains outside the
+ONNX graph.
 
 ---
 
@@ -79,7 +88,7 @@ The authoritative output mapping is stored in:
 
 `configs/class_mapping.json`
 
-Current mapping:
+Frozen mapping:
 
 | Output Index | Class |
 | -----------: | ----- |
@@ -89,15 +98,15 @@ Current mapping:
 |            3 | MINF  |
 |            4 | RV    |
 
-Training, evaluation, ONNX validation, and future deployment code must use the same mapping.
-
-A deployment application must never infer class semantics from output position without this contract.
+Training, evaluation, ONNX validation, and future deployment code must use the
+same mapping. A deployment application must never infer class semantics from
+output position without this contract.
 
 ---
 
 ## Inference Flow
 
-The intended deployment flow is:
+The deployment flow is:
 
 ```text
 medical image
@@ -106,7 +115,7 @@ frozen preprocessing pipeline
       ↓
 float32 tensor [N, 2, 14, 144, 144]
       ↓
-classifier.onnx
+artifacts/deployment/classifier.onnx
       ↓
 raw logits [N, 5]
       ↓
@@ -117,34 +126,11 @@ class probabilities
 
 ---
 
-## PyTorch ↔ ONNX Runtime Parity
-
-ONNX export alone is not considered sufficient validation.
-
-The project must compare PyTorch and ONNX Runtime outputs using the same real preprocessed ACDC patient input.
-
-The validation must verify that:
-
-* input tensors are identical;
-* output shapes are identical;
-* class ordering is identical;
-* logits are numerically equivalent within an empirically established tolerance.
-
-The parity tolerance will be defined after real export and measurement.
-
----
-
-## ONNX Opset
-
-The exact ONNX opset is not frozen yet.
-
-The final version must be compatible with the installed PyTorch, ONNX, and ONNX Runtime stack.
-
-The selected opset must be recorded here after export validation.
-
----
-
 ## Relationship to Preprocessing
+
+Medical-image preprocessing remains outside the ONNX graph and is defined by:
+
+`docs/preprocessing_contract.md`
 
 The ONNX model does not define:
 
@@ -156,11 +142,67 @@ The ONNX model does not define:
 * ED/ES extraction;
 * axis transposition.
 
-Those operations are defined separately in:
+A deployment application must satisfy both this ONNX deployment contract and the
+frozen preprocessing contract.
 
-`docs/preprocessing_contract.md`
+---
 
-A future deployment implementation must satisfy both contracts.
+## Verified Software Stack
+
+The Phase 10 export and parity validation used:
+
+| Component    | Version      |
+| ------------ | ------------ |
+| PyTorch      | 2.6.0+cu124  |
+| ONNX         | 1.22.0       |
+| ONNX Runtime | 1.28.0       |
+| ONNX Script  | 0.5.3        |
+| ONNX IR      | 0.1.15       |
+
+ONNX Script and ONNX IR are pinned for compatibility with the verified PyTorch
+2.6 exporter stack.
+
+ONNX checker passed.
+
+ONNX Runtime execution passed for batch size 1 and batch size 2.
+
+---
+
+## PyTorch ↔ ONNX Runtime Parity
+
+Phase 10 validated deployment numerical parity by comparing the Phase 9 PyTorch
+checkpoint and the exported ONNX model on the exact same already-preprocessed
+real ACDC tensors.
+
+Validated patient set:
+
+| Patient ID | Class |
+| ---------- | ----- |
+| patient001 | DCM   |
+| patient021 | HCM   |
+| patient041 | MINF  |
+| patient061 | NOR   |
+| patient081 | RV    |
+
+All PyTorch and ONNX predicted class indices matched.
+
+Worst measured errors across the validated patient set:
+
+| Metric                                | Value                  |
+| ------------------------------------- | ---------------------- |
+| maximum absolute error                | 9.5367431640625e-07    |
+| mean absolute error                   | 6.437301749429025e-07  |
+| maximum relative error                | 6.35185813280259e-07   |
+
+Final absolute logit parity tolerance:
+
+`1e-5`
+
+The predicted class index must match exactly.
+
+This is deployment numerical parity validation, not a model generalization
+evaluation. Phase 7 pooled out-of-fold results remain the generalization
+evidence.
 
 ---
 
@@ -177,25 +219,9 @@ float32 [1, 2, 14, 144, 144]
         ↓
 ONNX Runtime C++
         ↓
-classifier.onnx
+artifacts/deployment/classifier.onnx
         ↓
 5 raw logits
 ```
 
 The C++/Qt workstation is outside the scope of this repository.
-
----
-
-## Final Contract Update
-
-After ONNX export and parity validation, this document must be updated with:
-
-* final model filename;
-* ONNX opset;
-* exact input shape confirmation;
-* exact output shape;
-* class mapping version;
-* preprocessing contract version;
-* validated numerical tolerance;
-* tested ONNX Runtime version;
-* parity-test results.
