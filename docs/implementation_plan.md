@@ -338,46 +338,72 @@ CUDA execution is not claimed to be bitwise deterministic because PyTorch warned
 
 ---
 
-## Phase 10 — ONNX Deployment
+## Phase 10 — ONNX Deployment — COMPLETE
 
-Export the production model as:
+Phase 10 exported the Phase 9 production checkpoint:
 
 ```text
-classifier.onnx
+artifacts/checkpoints/phase9/classifier.pt
 ```
 
-Planned interface:
+to the final ONNX artifact:
+
+```text
+artifacts/deployment/classifier.onnx
+```
+
+Final ONNX interface:
 
 ```text
 Input:
 cine_mri
 float32
-[N, 2, D, H, W]
+[N, 2, 14, 144, 144]
+dynamic batch only
 
 Output:
 logits
 float32
 [N, 5]
+raw logits
 ```
 
 Softmax remains outside the model.
 
-Validate numerical parity between:
+Export used ONNX opset 18.
+
+ONNX checker passed.
+
+ONNX Runtime execution passed for batch sizes 1 and 2.
+
+Real ACDC PyTorch ↔ ONNX Runtime parity passed on:
 
 ```text
-PyTorch
-   ↕
-ONNX Runtime
+patient001 / DCM
+patient021 / HCM
+patient041 / MINF
+patient061 / NOR
+patient081 / RV
 ```
 
-using real preprocessed ACDC patient inputs.
+Predicted class index matched for all five patients.
 
-Finalize:
+Worst maximum absolute error:
 
 ```text
-docs/preprocessing_contract.md
-docs/onnx_deployment_contract.md
+9.5367431640625e-07
 ```
+
+Final absolute logit tolerance:
+
+```text
+1e-5
+```
+
+Phase 10 did not retrain or tune the model.
+
+Phase 10 parity validation is deployment numerical validation only. Phase 7
+pooled out-of-fold evaluation remains the generalization evidence.
 
 ---
 
@@ -408,7 +434,7 @@ The completed project should include:
 Current phase:
 
 ```text
-Phase 10 — ONNX Deployment — NEXT
+Python AI project functionally complete pending final Phase 10 quality gate / PR / merge / exact-main CI verification.
 ```
 
 Phase status:
@@ -424,7 +450,7 @@ Phase 6 — COMPLETE
 Phase 7 — COMPLETE
 Phase 8 — COMPLETE
 Phase 9 — COMPLETE
-Phase 10 — NEXT
+Phase 10 — COMPLETE
 ```
 
 Preprocessing constants are frozen.
@@ -441,8 +467,6 @@ Phase 8 compact 3D Grad-CAM is complete and validated on representative real ACD
 
 Phase 9 final production training is complete using all 100 labeled ACDC patients.
 
-The next major phase is:
-
-```text
-Phase 10 — ONNX Deployment
-```
+Phase 10 ONNX deployment is complete. The Python AI project is functionally
+complete pending final Phase 10 quality gate / PR / merge / exact-main CI
+verification.

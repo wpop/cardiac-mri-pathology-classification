@@ -1088,13 +1088,28 @@ It must not be presented as independent ED and ES attribution unless a different
 
 ## ONNX Deployment
 
-The final deployment model will be:
+The Phase 9 production checkpoint is:
 
 ```text
-classifier.onnx
+artifacts/checkpoints/phase9/classifier.pt
 ```
 
-Planned input contract:
+The final ONNX deployment artifact is:
+
+```text
+artifacts/deployment/classifier.onnx
+```
+
+The deployed architecture remains the custom `ResNet3D18`.
+
+Export used:
+
+```text
+torch.onnx.export(..., dynamo=True)
+ONNX opset 18
+```
+
+Final input contract:
 
 ```text
 name:
@@ -1104,12 +1119,13 @@ dtype:
 float32
 
 shape:
-[N, 2, D, H, W]
+[N, 2, 14, 144, 144]
+
+dynamic dimensions:
+batch only
 ```
 
-D, H, and W become fixed only after Phase 1.
-
-Planned output:
+Final output contract:
 
 ```text
 name:
@@ -1120,23 +1136,23 @@ float32
 
 shape:
 [N, 5]
-```
 
-Output semantics:
-
-```text
+semantics:
 raw logits
 ```
 
 Softmax remains outside the ONNX graph.
 
+Preprocessing remains outside the ONNX graph and is defined by the frozen
+preprocessing contract.
+
 ---
 
 ## PyTorch ↔ ONNX Runtime Parity
 
-The exported model is not considered deployment-ready merely because ONNX export succeeds.
-
-Automated numerical comparison must verify:
+Phase 10 verified deployment numerical parity between the Phase 9 PyTorch
+checkpoint and the final ONNX artifact using the same already-preprocessed real
+ACDC patient tensors.
 
 ```text
 same preprocessed patient tensor
@@ -1150,7 +1166,37 @@ same preprocessed patient tensor
        numerical comparison
 ```
 
-The numerical tolerance is established empirically for the actual exported model.
+ONNX checker passed.
+
+ONNX Runtime inference passed for batch sizes 1 and 2.
+
+Real ACDC parity passed on:
+
+```text
+patient001 / DCM
+patient021 / HCM
+patient041 / MINF
+patient061 / NOR
+patient081 / RV
+```
+
+All predicted class indices matched.
+
+Worst measured maximum absolute error:
+
+```text
+9.5367431640625e-07
+```
+
+Final absolute logit tolerance:
+
+```text
+1e-5
+```
+
+This is deployment numerical parity validation, not a model generalization
+evaluation. Phase 7 pooled out-of-fold results remain the generalization
+evidence.
 
 ---
 
@@ -1227,6 +1273,9 @@ Checks that the Python preprocessing pipeline remains deterministic.
 
 Checks that exported model inference agrees numerically with PyTorch.
 
+The finalized ONNX classifier uses an absolute logit tolerance of `1e-5`, and
+the predicted class index must match exactly.
+
 ### 3. Future Python ↔ C++ Preprocessing Parity
 
 This tolerance is **not invented in advance**.
@@ -1253,11 +1302,11 @@ Medical image
       ↓
 C++ / ITK preprocessing
       ↓
-[1, 2, D, H, W]
+[1, 2, 14, 144, 144]
       ↓
 ONNX Runtime C++
       ↓
-classifier.onnx
+artifacts/deployment/classifier.onnx
       ↓
 5 raw logits
       ↓
@@ -1574,23 +1623,49 @@ The `classifier.pt` artifact contains no optimizer state.
 
 Phase 9 training diagnostics are engineering QA only. The Phase 7 pooled out-of-fold metrics remain the reported generalization results.
 
-### Phase 10 — ONNX Deployment
+### Phase 10 — ONNX Deployment — COMPLETE
 
-Export:
+Completed ONNX deployment for the Phase 9 production model.
 
-```text
-classifier.onnx
-```
-
-Validate:
+Source checkpoint:
 
 ```text
-PyTorch
-   ↕
-ONNX Runtime
+artifacts/checkpoints/phase9/classifier.pt
 ```
 
-Finalize deployment and preprocessing documentation.
+Final ONNX artifact:
+
+```text
+artifacts/deployment/classifier.onnx
+```
+
+Interface:
+
+```text
+cine_mri float32 [N, 2, 14, 144, 144] -> logits float32 [N, 5]
+dynamic batch only
+raw logits
+```
+
+Export used `torch.onnx.export(..., dynamo=True)` with ONNX opset 18.
+
+ONNX checker passed, and ONNX Runtime inference passed for batch sizes 1 and 2.
+
+Real ACDC PyTorch ↔ ONNX Runtime parity passed on:
+
+```text
+patient001 / DCM
+patient021 / HCM
+patient041 / MINF
+patient061 / NOR
+patient081 / RV
+```
+
+All predicted class indices matched. Worst measured maximum absolute error was
+`9.5367431640625e-07`; the final absolute logit tolerance is `1e-5`.
+
+Phase 10 did not retrain or tune the model. Phase 7 pooled out-of-fold results
+remain the generalization evidence.
 
 ---
 
@@ -1641,7 +1716,7 @@ Phase 6 — COMPLETE
 Phase 7 — COMPLETE
 Phase 8 — COMPLETE
 Phase 9 — COMPLETE
-Phase 10 — NEXT
+Phase 10 — COMPLETE
 ```
 
 Completed so far:
@@ -1665,7 +1740,9 @@ Completed so far:
 * Phase 7 pooled OOF predictions, final metrics, and figures generated.
 * Phase 8 compact 3D Grad-CAM implemented and validated on representative real ACDC patients;
 * Phase 9 final production model trained on all 100 labeled ACDC patients and saved as `artifacts/checkpoints/phase9/classifier.pt`;
-* Phase 9 classifier reload validation passed with finite `[1, 5]` logits for a real ACDC input.
+* Phase 9 classifier reload validation passed with finite `[1, 5]` logits for a real ACDC input;
+* Phase 10 ONNX deployment completed with final artifact `artifacts/deployment/classifier.onnx`;
+* ONNX checker passed, ONNX Runtime inference passed for batch sizes 1 and 2, and real ACDC PyTorch ↔ ONNX Runtime parity passed on five representative patients.
 
 Frozen preprocessing summary:
 
@@ -1692,4 +1769,6 @@ compatible pretrained Kinetics weights
 
 CUDA execution requested deterministic algorithms with `warn_only=True`. During Phase 9 final production training, PyTorch emitted a non-deterministic implementation warning for `max_pool3d_with_indices_backward_cuda`, so CUDA training is not claimed to be bitwise deterministic.
 
-The next phase is **Phase 10 — ONNX Deployment**.
+The Python implementation and deployment work is complete. Formal project
+closure still requires the final quality gate, PR, merge, and exact-main CI
+verification.

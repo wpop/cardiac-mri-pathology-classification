@@ -18,6 +18,8 @@ dependencies = [
     "pyyaml",
     "onnx",
     "onnxruntime",
+    "onnxscript==0.5.3",
+    "onnx-ir==0.1.15",
 ]
 
 [project.optional-dependencies]
