@@ -26,6 +26,51 @@ The workstation itself is deliberately outside the scope of this repository.
 
 ---
 
+## Project at a Glance
+
+This project implements an end-to-end cardiac MRI pathology classification pipeline using the official ACDC dataset, deterministic preprocessing, a custom 3D ResNet-18 implementation, cross-validation, explainability, production training, and ONNX deployment validation.
+
+### Preprocessing QA
+
+<p align="center">
+  <img src="docs/images/preprocessing_qa.jpg" alt="Representative preprocessing QA from the frozen pipeline on real ACDC data" width="90%">
+  <br>
+  <br>
+  <em>Representative QA from the frozen preprocessing pipeline on real ACDC data.</em>
+</p>
+
+### Cross-Validation Results
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/images/pooled_confusion_matrix.png" alt="Phase 7 pooled out-of-fold confusion matrix" width="100%">
+      <br>
+      <em>Phase 7 pooled out-of-fold confusion matrix.</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/images/pooled_ovr_roc.png" alt="Phase 7 pooled one-vs-rest ROC curves" width="100%">
+      <br>
+      <em>Phase 7 pooled one-vs-rest ROC curves.</em>
+    </td>
+  </tr>
+</table>
+
+Phase 7 pooled out-of-fold evaluation remains the project's model generalization evidence.
+
+### 3D Grad-CAM Explainability
+
+<p align="center">
+  <img src="docs/images/grad_cam_example.png" alt="Representative Phase 8 3D Grad-CAM visualization from a real ACDC patient study" width="90%">
+  <br>
+  <br>
+  <em>Representative Phase 8 3D Grad-CAM visualization from a real ACDC patient study.</em>
+</p>
+
+Phase 9 trained the final production classifier on all 100 labeled ACDC patients, and Phase 10 exported and validated the final ONNX deployment model.
+
+---
+
 ## Project Motivation
 
 Cardiac cine MRI contains both anatomical and functional information about the heart.
