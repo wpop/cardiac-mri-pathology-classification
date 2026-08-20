@@ -224,4 +224,16 @@ artifacts/deployment/classifier.onnx
 5 raw logits
 ```
 
+The portable handoff package for this integration is:
+
+`artifacts/deployment/package/cardiac_mri_pathology/`
+
+Package contents are divided by deployment role:
+
+| Role | Files |
+| ---- | ----- |
+| runtime-required | `classifier.onnx`, `class_mapping.json`, `deployment.json` |
+| validation-only | `golden/` |
+| developer-only | `docs/` |
+
 The C++/Qt workstation is outside the scope of this repository.
