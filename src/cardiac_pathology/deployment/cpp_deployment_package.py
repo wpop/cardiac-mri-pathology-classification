@@ -91,9 +91,7 @@ class CppDeploymentPackageBuilder:
         )
         self.config_path = self.repository_root / "configs/default.yaml"
         self.class_mapping_path = self.repository_root / "configs/class_mapping.json"
-        self.preprocessing_contract_path = (
-            self.repository_root / "docs/preprocessing_contract.md"
-        )
+        self.preprocessing_contract_path = self.repository_root / "docs/preprocessing_contract.md"
         self.onnx_contract_path = self.repository_root / "docs/onnx_deployment_contract.md"
         self.golden_preprocessing_dir = self.repository_root / "tests/fixtures/golden"
         self.golden_preprocessing_manifest_path = self.golden_preprocessing_dir / "manifest.json"
@@ -559,13 +557,21 @@ class CppDeploymentPackageBuilder:
         for patient in patients:
             entry = require_mapping_value(patient, "inference patient")
             patient_id = require_str(entry, "patient_id")
-            input_path = self.package_dir / "golden/inference" / require_str(
-                entry,
-                "input_filename",
+            input_path = (
+                self.package_dir
+                / "golden/inference"
+                / require_str(
+                    entry,
+                    "input_filename",
+                )
             )
-            logits_path = self.package_dir / "golden/inference" / require_str(
-                entry,
-                "logits_filename",
+            logits_path = (
+                self.package_dir
+                / "golden/inference"
+                / require_str(
+                    entry,
+                    "logits_filename",
+                )
             )
             if sha256_file(input_path) != require_str(entry, "input_sha256"):
                 raise ValueError(f"{patient_id}: inference input checksum mismatch")
